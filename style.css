@@ -51,6 +51,10 @@ body.light-mode #chat-page .border-t {
     border-color: #e4e4e7;
 }
 
+#chat-input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
 /* Chat Bubbles */
 .message {
     max-width: 80%;
