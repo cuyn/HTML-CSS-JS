@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exitChatAlt = document.getElementById('exit-chat-alt');
     const nextChat = document.getElementById('next-chat');
     const chatSubtitle = document.getElementById('chat-subtitle');
+    const partnerName = document.getElementById('partner-name');
 
     const openChat = (isNearby = false) => {
         if (!selectedGender) {
@@ -81,9 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Simulate finding someone
             setTimeout(() => {
+                const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
+                partnerName.innerText = `Anonymous ${partnerGender}`;
+                
                 chatMessages.innerHTML = `
                     <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
-                        Connected with a ${isNearby ? 'local ' : ''}stranger. Say hi!
+                        Connected with an ${isNearby ? 'local ' : ''}anonymous. Say hi!
                     </div>
                 `;
             }, 1000);
@@ -141,9 +145,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         setTimeout(() => {
+            const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
+            partnerName.innerText = `Anonymous ${partnerGender}`;
+            
             chatMessages.innerHTML = `
                 <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
-                    Connected with a new stranger. Say hi!
+                    Connected with a new anonymous. Say hi!
                 </div>
             `;
         }, 1000);
