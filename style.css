@@ -16,8 +16,16 @@ body {
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #121212;
+    color: #f8f8f8;
+}
+
+.ticker-glow {
+    text-shadow: 0 0 8px rgba(125, 211, 252, 0.5);
+}
+
+.bg-black {
+    background-color: #121212 !important;
 }
 
 .hidden {
