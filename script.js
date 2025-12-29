@@ -99,31 +99,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Navigation & Chat Logic
     const addStatusMessage = (text) => {
         if (chatMessages) {
+            const existingSearching = Array.from(chatMessages.querySelectorAll('.status-msg')).find(el => el.textContent === "Searching for a partner...");
+            if (text === "Searching for a partner..." && existingSearching) return;
+
             const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse";
+            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse status-msg";
             msgDiv.textContent = text;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msgDiv;
         }
     };
 
-    const findPartner = () => {
-        if (chatMessages) {
-            console.log("Finding new partner...");
+    let peer = null;
+    let conn = null;
+    let myId = null;
+
+    const initPeer = () => {
+        if (peer) return;
+        peer = new Peer();
+        peer.on('open', (id) => {
+            myId = id;
+            console.log('My peer ID is: ' + id);
+        });
+        peer.on('connection', (connection) => {
+            if (conn) {
+                connection.close();
+                return;
+            }
+            conn = connection;
+            setupConnection();
+        });
+    };
+
+    const setupConnection = () => {
+        conn.on('open', () => {
             chatMessages.innerHTML = "";
-            addStatusMessage("Finding a random chat partner...");
-            
-            setTimeout(() => {
+            addStatusMessage("Connected with a real person! Say hi!");
+            if (partnerName) {
                 const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
-                if (partnerName) partnerName.innerText = `Anonymous ${partnerGender}`;
-                
-                chatMessages.innerHTML = `
-                    <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
-                        Connected with an anonymous. Say hi!
-                    </div>
-                `;
-            }, 1000);
+                partnerName.innerText = `Anonymous ${partnerGender}`;
+            }
+        });
+        conn.on('data', (data) => {
+            addMessage(data, 'received');
+        });
+        conn.on('close', () => {
+            addStatusMessage("Partner disconnected.");
+            conn = null;
+        });
+    };
+
+    const findPartner = () => {
+        if (!peer) initPeer();
+        if (conn) {
+            conn.close();
+            conn = null;
         }
+        chatMessages.innerHTML = "";
+        addStatusMessage("Searching for a partner...");
+
+        // In a real production app, you'd use a signaling server to match IDs.
+        // For this demo, we'll try to connect to a "lobby" or simulated wait.
+        // Since we don't have a backend list of IDs, we'll simulate the "searching" state.
+        // Real P2P matching requires a broker/server to exchange IDs.
+        
+        setTimeout(() => {
+            if (!conn) {
+                const msg = chatMessages.querySelector('.status-msg');
+                if (msg) msg.textContent = "We are searching, please wait...";
+            }
+        }, 3000);
     };
 
     const openChat = (isNearby = false) => {
@@ -211,10 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatInput) {
             const text = chatInput.value.trim();
             if (text) {
-                console.log("Message text:", text);
-                addMessage(text, 'sent');
-                chatInput.value = '';
-                // Bot responses removed to prepare for real user integration
+                if (conn && conn.open) {
+                    conn.send(text);
+                    addMessage(text, 'sent');
+                    chatInput.value = '';
+                } else {
+                    addStatusMessage("No one is connected yet.");
+                }
             }
         }
     };
