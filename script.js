@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeIcon = document.getElementById('theme-icon');
     const body = document.body;
     const adBannerLink = document.getElementById('ad-banner-link');
+    const adBannerLinkChat = document.getElementById('ad-banner-link-chat');
     const adBannerText = document.getElementById('ad-banner-text');
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
@@ -36,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Static HTML banner used for precise styling control
     if (adBannerLink) {
         adBannerLink.href = AD_CONFIG.link;
+    }
+    if (adBannerLinkChat) {
+        adBannerLinkChat.href = AD_CONFIG.link;
     }
 
     // 3. Theme Toggle Removed
