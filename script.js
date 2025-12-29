@@ -7,13 +7,28 @@ const AD_CONFIG = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Elements
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
+    const adBannerLink = document.getElementById('ad-banner-link');
+    const adBannerText = document.getElementById('ad-banner-text');
+    const landingPage = document.getElementById('landing-page');
+    const chatPage = document.getElementById('chat-page');
+    const startNearby = document.getElementById('start-nearby');
+    const startRandom = document.getElementById('start-random');
+    const exitChat = document.getElementById('exit-chat');
+    const nextChat = document.getElementById('next-chat');
+    const chatSubtitle = document.getElementById('chat-subtitle');
+    const partnerName = document.getElementById('partner-name');
+    const sendButton = document.getElementById('send-button');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
     // Initialize Lucide icons
     lucide.createIcons();
 
-    // 1. Initialize Ad Banner
-    const adBannerLink = document.getElementById('ad-banner-link');
-    const adBannerText = document.getElementById('ad-banner-text');
-    
+    // 2. Initialize Ad Banner
     if (adBannerLink && adBannerText) {
         adBannerLink.href = AD_CONFIG.link;
         adBannerText.innerHTML = AD_CONFIG.template
@@ -21,19 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace('{timer}', `<span class="ml-2 px-2 py-0.5 bg-blue-500 text-white rounded-full">${AD_CONFIG.timer}</span>`);
     }
 
-    // 2. Theme Toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const body = document.body;
+    // 3. Theme Toggle
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            if (themeIcon) {
+                themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
+                lucide.createIcons();
+            }
+        });
+    }
 
-    themeToggle.addEventListener('click', () => {
-        body.classList.toggle('light-mode');
-        const isLight = body.classList.contains('light-mode');
-        themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
-        lucide.createIcons();
-    });
-
-    // 3. Gender Selection
+    // 4. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
     let selectedGender = null;
 
@@ -45,16 +60,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 4. Navigation Logic
-    const landingPage = document.getElementById('landing-page');
-    const chatPage = document.getElementById('chat-page');
-    const startNearby = document.getElementById('start-nearby');
-    const startRandom = document.getElementById('start-random');
-    const exitChat = document.getElementById('exit-chat');
-    const exitChatAlt = document.getElementById('exit-chat-alt');
-    const nextChat = document.getElementById('next-chat');
-    const chatSubtitle = document.getElementById('chat-subtitle');
-    const partnerName = document.getElementById('partner-name');
+    // 5. Navigation & Chat Logic
+    const addStatusMessage = (text) => {
+        if (chatMessages) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse";
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    };
+
+    const findPartner = () => {
+        if (chatMessages) {
+            chatMessages.innerHTML = "";
+            addStatusMessage("Finding a random chat partner...");
+            
+            setTimeout(() => {
+                const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
+                if (partnerName) partnerName.innerText = `Anonymous ${partnerGender}`;
+                
+                chatMessages.innerHTML = `
+                    <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
+                        Connected with an anonymous. Say hi!
+                    </div>
+                `;
+            }, 1000);
+        }
+    };
 
     const openChat = (isNearby = false) => {
         if (!selectedGender) {
@@ -62,126 +95,93 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const proceedToChat = (distance = null) => {
-            landingPage.classList.add('hidden');
-            chatPage.classList.remove('hidden');
-            
-            // Update subtitle with distance if nearby
-            if (distance) {
-                chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${distance} away`;
-            } else {
-                chatSubtitle.innerHTML = ``;
-            }
-
-            // Clear previous messages and show "Finding..." status
-            chatMessages.innerHTML = `
-                <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse">
-                    Finding a random chat partner...
-                </div>
-            `;
-
-            // Simulate finding someone
-            setTimeout(() => {
-                const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
-                partnerName.innerText = `Anonymous ${partnerGender}`;
-                
-                chatMessages.innerHTML = `
-                    <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
-                        Connected with an ${isNearby ? 'local ' : ''}anonymous. Say hi!
-                    </div>
-                `;
-            }, 1000);
-        };
-
         if (isNearby) {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by your browser.");
                 return;
             }
 
-            // Show searching feedback
-            startNearby.style.opacity = '0.5';
-            startNearby.querySelector('h3').innerText = "Searching nearby...";
+            if (startNearby) {
+                startNearby.style.opacity = '0.5';
+                const h3 = startNearby.querySelector('h3');
+                if (h3) h3.innerText = "Searching nearby...";
+            }
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    // Simulate finding someone within 20km
-                    const randomDistance = (Math.random() * 19 + 0.5).toFixed(1); // 0.5km to 19.5km
-                    setTimeout(() => {
+                    const randomDistance = (Math.random() * 19 + 0.5).toFixed(1);
+                    if (startNearby) {
                         startNearby.style.opacity = '1';
-                        startNearby.querySelector('h3').innerText = "Chat Nearby";
-                        proceedToChat(`${randomDistance}km`);
-                    }, 1500);
+                        const h3 = startNearby.querySelector('h3');
+                        if (h3) h3.innerText = "Chat Nearby";
+                    }
+                    landingPage.classList.add('hidden');
+                    chatPage.classList.remove('hidden');
+                    if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
+                    findPartner();
                 },
                 (error) => {
-                    startNearby.style.opacity = '1';
-                    startNearby.querySelector('h3').innerText = "Chat Nearby";
+                    if (startNearby) {
+                        startNearby.style.opacity = '1';
+                        const h3 = startNearby.querySelector('h3');
+                        if (h3) h3.innerText = "Chat Nearby";
+                    }
                     alert("Unable to retrieve your location. Using random match instead.");
-                    proceedToChat();
+                    landingPage.classList.add('hidden');
+                    chatPage.classList.remove('hidden');
+                    if (chatSubtitle) chatSubtitle.innerHTML = "";
+                    findPartner();
                 }
             );
         } else {
-            proceedToChat();
+            landingPage.classList.add('hidden');
+            chatPage.classList.remove('hidden');
+            if (chatSubtitle) chatSubtitle.innerHTML = "";
+            findPartner();
         }
     };
 
-    startNearby.addEventListener('click', () => openChat(true));
-    startRandom.addEventListener('click', () => openChat(false));
+    if (startNearby) startNearby.addEventListener('click', () => openChat(true));
+    if (startRandom) startRandom.addEventListener('click', () => openChat(false));
 
-    const closeChat = () => {
-        chatPage.classList.add('hidden');
-        landingPage.classList.remove('hidden');
-    };
+    if (exitChat) {
+        exitChat.addEventListener('click', () => {
+            chatPage.classList.add('hidden');
+            landingPage.classList.remove('hidden');
+        });
+    }
 
-    exitChat.addEventListener('click', closeChat);
-    exitChatAlt.addEventListener('click', closeChat);
+    if (nextChat) {
+        nextChat.addEventListener('click', () => {
+            console.log("Next chat clicked");
+            findPartner();
+        });
+    }
 
-    nextChat.addEventListener('click', () => {
-        // Simple visual feedback for "finding next"
-        chatMessages.innerHTML = `
-            <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse">
-                Looking for someone to chat with...
-            </div>
-        `;
-        
-        setTimeout(() => {
-            const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
-            partnerName.innerText = `Anonymous ${partnerGender}`;
-            
-            chatMessages.innerHTML = `
-                <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
-                    Connected with a new anonymous. Say hi!
-                </div>
-            `;
-        }, 1000);
-    });
-
-    // 5. Chat Functionality
-    const sendButton = document.getElementById('send-button');
-    const chatInput = document.getElementById('chat-input');
-    const chatMessages = document.getElementById('chat-messages');
-
+    // 6. Messaging Logic
     const addMessage = (text, type = 'sent') => {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        msgDiv.textContent = text;
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (chatMessages) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     };
 
     const sendMessage = () => {
-        const text = chatInput.value.trim();
-        if (text) {
-            console.log("Sending message:", text); // Debug log
-            addMessage(text, 'sent');
-            chatInput.value = '';
+        if (chatInput) {
+            const text = chatInput.value.trim();
+            if (text) {
+                addMessage(text, 'sent');
+                chatInput.value = '';
 
-            // Simulated response
-            setTimeout(() => {
-                const responses = ["Hey there!", "How are you?", "What's up?", "Cool!", "Haha nice."];
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                addMessage(randomResponse, 'received');
-            }, 1000);
+                setTimeout(() => {
+                    const responses = ["Hey there!", "How are you?", "What's up?", "Cool!", "Haha nice."];
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    addMessage(randomResponse, 'received');
+                }, 1000);
+            }
         }
     };
 
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
+        chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 sendMessage();
@@ -201,11 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. Online Count Simulation
+    // 7. Online Count Simulation
     setInterval(() => {
         const count = document.getElementById('online-count');
-        const current = parseInt(count.innerText);
-        const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        count.innerText = current + change;
+        if (count) {
+            const current = parseInt(count.innerText);
+            const change = Math.floor(Math.random() * 5) - 2;
+            count.innerText = current + change;
+        }
     }, 5000);
 });

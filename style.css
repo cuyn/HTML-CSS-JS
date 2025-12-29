@@ -1,6 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@900&display=swap');
+
+:root {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --card-bg: rgba(24, 24, 27, 0.4);
+    --border-color: rgba(39, 39, 42, 0.5);
+}
+
+.cyber-font {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.1em;
+}
+
 body {
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.cyber-font {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.1em;
 }
 
 .hidden {
