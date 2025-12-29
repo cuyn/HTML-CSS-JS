@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (distance) {
                 chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${distance} away`;
             } else {
-                chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online`;
+                chatSubtitle.innerHTML = ``;
             }
 
             // Clear previous messages and show "Finding..." status
