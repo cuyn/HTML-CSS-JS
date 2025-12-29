@@ -1,0 +1,43 @@
+body {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.gender-btn.selected {
+    border-color: rgba(59, 130, 246, 0.5);
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+/* Glassmorphism background for nav */
+nav {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* Theme styles */
+body.light-mode {
+    background-color: #f4f4f5;
+    color: #18181b;
+}
+
+body.light-mode .bg-zinc-900 {
+    background-color: #ffffff;
+}
+
+body.light-mode .border-zinc-800 {
+    border-color: #e4e4e7;
+}
+
+body.light-mode .text-zinc-400 {
+    color: #71717a;
+}
+
+body.light-mode nav {
+    background: rgba(255, 255, 255, 0.8);
+    border-top-color: #e4e4e7;
+}
+
+body.light-mode #theme-toggle:hover {
+    background-color: #f4f4f5;
+}
