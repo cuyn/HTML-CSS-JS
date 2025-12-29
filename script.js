@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startNearby = document.getElementById('start-nearby');
     const startRandom = document.getElementById('start-random');
     const exitChat = document.getElementById('exit-chat');
+    const exitChatAlt = document.getElementById('exit-chat-alt');
+    const nextChat = document.getElementById('next-chat');
     const chatSubtitle = document.getElementById('chat-subtitle');
 
     const openChat = (isNearby = false) => {
@@ -70,12 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online`;
             }
 
-            // Clear previous messages
-            document.getElementById('chat-messages').innerHTML = `
-                <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
-                    Connected with a ${isNearby ? 'local ' : ''}stranger. Say hi!
+            // Clear previous messages and show "Finding..." status
+            chatMessages.innerHTML = `
+                <div class="self-center bg-zinc-900/50 text-zinc-400 text-[10px] px-4 py-2 rounded-2xl border border-zinc-800/50 mb-2 animate-pulse">
+                    Finding a random chat partner...
                 </div>
             `;
+
+            // Simulate finding someone
+            setTimeout(() => {
+                chatMessages.innerHTML = `
+                    <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
+                        Connected with a ${isNearby ? 'local ' : ''}stranger. Say hi!
+                    </div>
+                `;
+            }, 1000);
         };
 
         if (isNearby) {
@@ -113,9 +124,29 @@ document.addEventListener('DOMContentLoaded', () => {
     startNearby.addEventListener('click', () => openChat(true));
     startRandom.addEventListener('click', () => openChat(false));
 
-    exitChat.addEventListener('click', () => {
+    const closeChat = () => {
         chatPage.classList.add('hidden');
         landingPage.classList.remove('hidden');
+    };
+
+    exitChat.addEventListener('click', closeChat);
+    exitChatAlt.addEventListener('click', closeChat);
+
+    nextChat.addEventListener('click', () => {
+        // Simple visual feedback for "finding next"
+        chatMessages.innerHTML = `
+            <div class="self-center bg-zinc-900/50 text-zinc-400 text-[10px] px-4 py-2 rounded-2xl border border-zinc-800/50 mb-2 animate-pulse">
+                Looking for someone to chat with...
+            </div>
+        `;
+        
+        setTimeout(() => {
+            chatMessages.innerHTML = `
+                <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
+                    Connected with a new stranger. Say hi!
+                </div>
+            `;
+        }, 1000);
     });
 
     // 5. Chat Functionality
