@@ -7,6 +7,8 @@ const AD_CONFIG = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded, initializing...");
+
     // 1. Initialize Elements
     const themeToggle = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
@@ -26,7 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
 
     // Initialize Lucide icons
-    lucide.createIcons();
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 
     // 2. Initialize Ad Banner
     if (adBannerLink && adBannerText) {
@@ -41,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         themeToggle.addEventListener('click', () => {
             body.classList.toggle('light-mode');
             const isLight = body.classList.contains('light-mode');
-            if (themeIcon) {
+            if (themeIcon && window.lucide) {
                 themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
                 lucide.createIcons();
             }
@@ -57,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             genderButtons.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedGender = btn.dataset.gender;
+            console.log("Gender selected:", selectedGender);
         });
     });
 
@@ -73,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const findPartner = () => {
         if (chatMessages) {
+            console.log("Finding new partner...");
             chatMessages.innerHTML = "";
             addStatusMessage("Finding a random chat partner...");
             
@@ -115,8 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         const h3 = startNearby.querySelector('h3');
                         if (h3) h3.innerText = "Chat Nearby";
                     }
-                    landingPage.classList.add('hidden');
-                    chatPage.classList.remove('hidden');
+                    if (landingPage) landingPage.classList.add('hidden');
+                    if (chatPage) chatPage.classList.remove('hidden');
                     if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
                     findPartner();
                 },
@@ -127,15 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (h3) h3.innerText = "Chat Nearby";
                     }
                     alert("Unable to retrieve your location. Using random match instead.");
-                    landingPage.classList.add('hidden');
-                    chatPage.classList.remove('hidden');
+                    if (landingPage) landingPage.classList.add('hidden');
+                    if (chatPage) chatPage.classList.remove('hidden');
                     if (chatSubtitle) chatSubtitle.innerHTML = "";
                     findPartner();
                 }
             );
         } else {
-            landingPage.classList.add('hidden');
-            chatPage.classList.remove('hidden');
+            if (landingPage) landingPage.classList.add('hidden');
+            if (chatPage) chatPage.classList.remove('hidden');
             if (chatSubtitle) chatSubtitle.innerHTML = "";
             findPartner();
         }
@@ -146,14 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (exitChat) {
         exitChat.addEventListener('click', () => {
-            chatPage.classList.add('hidden');
-            landingPage.classList.remove('hidden');
+            if (chatPage) chatPage.classList.add('hidden');
+            if (landingPage) landingPage.classList.remove('hidden');
         });
     }
 
     if (nextChat) {
         nextChat.addEventListener('click', () => {
-            console.log("Next chat clicked");
+            console.log("Next chat button clicked");
             findPartner();
         });
     }
@@ -170,9 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const sendMessage = () => {
+        console.log("sendMessage called");
         if (chatInput) {
             const text = chatInput.value.trim();
             if (text) {
+                console.log("Message text:", text);
                 addMessage(text, 'sent');
                 chatInput.value = '';
 
@@ -205,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         const count = document.getElementById('online-count');
         if (count) {
-            const current = parseInt(count.innerText);
+            const current = parseInt(count.innerText) || 279;
             const change = Math.floor(Math.random() * 5) - 2;
-            count.innerText = current + change;
+            count.innerText = Math.max(100, current + change);
         }
     }, 5000);
 });
