@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Clear previous messages and show "Finding..." status
             chatMessages.innerHTML = `
-                <div class="self-center bg-zinc-900/50 text-zinc-400 text-[10px] px-4 py-2 rounded-2xl border border-zinc-800/50 mb-2 animate-pulse">
+                <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse">
                     Finding a random chat partner...
                 </div>
             `;
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Simulate finding someone
             setTimeout(() => {
                 chatMessages.innerHTML = `
-                    <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
+                    <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
                         Connected with a ${isNearby ? 'local ' : ''}stranger. Say hi!
                     </div>
                 `;
@@ -135,14 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
     nextChat.addEventListener('click', () => {
         // Simple visual feedback for "finding next"
         chatMessages.innerHTML = `
-            <div class="self-center bg-zinc-900/50 text-zinc-400 text-[10px] px-4 py-2 rounded-2xl border border-zinc-800/50 mb-2 animate-pulse">
+            <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse">
                 Looking for someone to chat with...
             </div>
         `;
         
         setTimeout(() => {
             chatMessages.innerHTML = `
-                <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
+                <div class="self-center bg-amber-500/10 text-amber-500 text-[10px] px-3 py-1 rounded-full border border-amber-500/20">
                     Connected with a new stranger. Say hi!
                 </div>
             `;
