@@ -10,12 +10,20 @@
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col font-sans transition-colors duration-300">
     <!-- Configurable Ad Banner -->
-    <a id="ad-banner-link" href="#" target="_blank" class="block px-4 py-2 bg-[#1e293b] border-b border-white/5 text-center transition-colors">
-        <div class="flex items-center justify-center gap-3">
-            <p id="ad-banner-text" class="text-[13px] text-blue-400 font-medium">
-                Check out @duhannad for more updates!
-            </p>
-            <span class="bg-blue-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm shadow-blue-500/20">2s</span>
+    <a id="ad-banner-link" href="#" target="_blank" class="block bg-[#0f172a] border-b border-white/5 overflow-hidden">
+        <div class="relative flex items-center h-10">
+            <!-- News Ticker -->
+            <div class="flex-1 overflow-hidden relative h-full flex items-center">
+                <div class="ticker-content flex whitespace-nowrap pl-[100%]">
+                    <span id="ad-banner-text" class="text-[13px] text-blue-400 font-medium px-4">
+                        Check out @duhannad for more updates!
+                    </span>
+                </div>
+            </div>
+            <!-- Countdown Badge -->
+            <div class="flex items-center px-4 bg-[#0f172a] z-10 shadow-[-10px_0_15px_#0f172a]">
+                <span id="countdown-badge" class="bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg shadow-blue-500/20 min-w-[45px] text-center tabular-nums">10s</span>
+            </div>
         </div>
     </a>
 
@@ -89,13 +97,19 @@
 
     <!-- Chat Page (Hidden by default) -->
     <div id="chat-page" class="hidden fixed inset-0 z-50 bg-black flex flex-col">
-        <!-- Ad Banner in Chat -->
-        <a id="ad-banner-link-chat" href="https://instagram.com/duhannad" target="_blank" class="block px-4 py-2 bg-[#1e293b] border-b border-white/5 text-center transition-colors">
-            <div class="flex items-center justify-center gap-3">
-                <p class="text-[13px] text-blue-400 font-medium">
-                    Check out @duhannad for more updates!
-                </p>
-                <span class="bg-blue-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm shadow-blue-500/20">2s</span>
+        <!-- News Ticker in Chat -->
+        <a id="ad-banner-link-chat" href="https://instagram.com/duhannad" target="_blank" class="block bg-[#0f172a] border-b border-white/5 overflow-hidden">
+            <div class="relative flex items-center h-10">
+                <div class="flex-1 overflow-hidden relative h-full flex items-center">
+                    <div class="ticker-content flex whitespace-nowrap pl-[100%]">
+                        <span class="text-[13px] text-blue-400 font-medium px-4">
+                            Check out @duhannad for more updates!
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center px-4 bg-[#0f172a] z-10 shadow-[-10px_0_15px_#0f172a]">
+                    <span class="countdown-badge-chat bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg shadow-blue-500/20 min-w-[45px] text-center tabular-nums">10s</span>
+                </div>
             </div>
         </a>
         

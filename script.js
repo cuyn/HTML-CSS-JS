@@ -3,36 +3,51 @@ const AD_CONFIGS = [
     {
         name: "@duhannad",
         link: "https://www.instagram.com/duhannad",
-        timer: "2s",
         text: "Check out @duhannad for more updates!"
     },
     {
         name: "@example",
         link: "https://instagram.com/example",
-        timer: "New",
         text: "Follow us on Instagram for latest news!"
     }
 ];
 
 let currentAdIndex = 0;
+let countdownSeconds = 10;
 
 function updateBanners() {
     const ad = AD_CONFIGS[currentAdIndex];
-    const banners = [
-        { link: document.getElementById('ad-banner-link'), text: document.getElementById('ad-banner-text') },
-        { link: document.getElementById('ad-banner-link-chat'), text: document.querySelector('#ad-banner-link-chat p') }
-    ];
+    const bannerLink = document.getElementById('ad-banner-link');
+    const bannerText = document.getElementById('ad-banner-text');
+    const bannerLinkChat = document.getElementById('ad-banner-link-chat');
+    const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
 
-    banners.forEach(b => {
-        if (b.link) b.href = ad.link;
-        if (b.text) b.textContent = ad.text;
-        
-        // Update the badge if it exists
-        const badge = b.link ? b.link.querySelector('span') : null;
-        if (badge) badge.textContent = ad.timer;
-    });
+    if (bannerLink) bannerLink.href = ad.link;
+    if (bannerText) bannerText.textContent = ad.text;
+    if (bannerLinkChat) bannerLinkChat.href = ad.link;
+    if (bannerTextChat) bannerTextChat.textContent = ad.text;
 
     currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
+    countdownSeconds = 10; // Reset countdown
+}
+
+function startCountdown() {
+    setInterval(() => {
+        countdownSeconds--;
+        if (countdownSeconds < 0) {
+            updateBanners();
+            countdownSeconds = 10;
+        }
+        
+        const badges = [
+            document.getElementById('countdown-badge'),
+            document.querySelector('.countdown-badge-chat')
+        ];
+        
+        badges.forEach(badge => {
+            if (badge) badge.textContent = `${countdownSeconds}s`;
+        });
+    }, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,9 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
-    // 2. Initialize and Start Ad Rotation
-    updateBanners(); // Set initial ad
-    setInterval(updateBanners, 15000); // Rotate every 15 seconds
+    // 2. Initialize and Start Ad Rotation with Countdown
+    updateBanners(); 
+    startCountdown();
 
     // 3. Theme Toggle Removed
     

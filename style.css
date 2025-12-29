@@ -74,3 +74,18 @@ nav {
 .message {
     animation: fadeIn 0.3s ease-out;
 }
+
+/* Ticker Animation */
+.ticker-content {
+    animation: ticker-smooth 25s linear infinite;
+}
+
+@keyframes ticker-smooth {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-200%); }
+}
+
+#ad-banner-link:hover .ticker-content,
+#ad-banner-link-chat:hover .ticker-content {
+    animation-play-state: paused;
+}
