@@ -40,18 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace('{timer}', `<span class="ml-2 px-2 py-0.5 bg-blue-500 text-white rounded-full">${AD_CONFIG.timer}</span>`);
     }
 
-    // 3. Theme Toggle
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('light-mode');
-            const isLight = body.classList.contains('light-mode');
-            if (themeIcon && window.lucide) {
-                themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
-                lucide.createIcons();
-            }
-        });
-    }
-
+    // 3. Theme Toggle Removed
+    
     // 4. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
     let selectedGender = null;
@@ -183,12 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Message text:", text);
                 addMessage(text, 'sent');
                 chatInput.value = '';
-
-                setTimeout(() => {
-                    const responses = ["Hey there!", "How are you?", "What's up?", "Cool!", "Haha nice."];
-                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                    addMessage(randomResponse, 'received');
-                }, 1000);
+                // Bot responses removed to prepare for real user integration
             }
         }
     };
@@ -213,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         const count = document.getElementById('online-count');
         if (count) {
-            const current = parseInt(count.innerText) || 279;
+            const current = parseInt(count.innerText) || 280;
             const change = Math.floor(Math.random() * 5) - 2;
             count.innerText = Math.max(100, current + change);
         }

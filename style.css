@@ -16,8 +16,8 @@ body {
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: #000000;
+    color: #ffffff;
 }
 
 .hidden {
@@ -35,41 +35,6 @@ nav {
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-}
-
-/* Theme styles */
-body.light-mode {
-    background-color: #f4f4f5;
-    color: #18181b;
-}
-
-body.light-mode #brand-logo {
-    color: #000000 !important;
-}
-
-body.light-mode #landing-page,
-body.light-mode #chat-page {
-    background-color: #f4f4f5;
-}
-
-body.light-mode .bg-zinc-900 {
-    background-color: #ffffff;
-}
-
-body.light-mode .border-zinc-800 {
-    border-color: #e4e4e7;
-}
-
-body.light-mode .text-zinc-400 {
-    color: #71717a;
-}
-
-body.light-mode nav,
-body.light-mode header,
-body.light-mode #chat-page header,
-body.light-mode #chat-page .border-t {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: #e4e4e7;
 }
 
 #chat-input {
@@ -98,11 +63,6 @@ body.light-mode #chat-page .border-t {
     background: #27272a;
     color: #e4e4e7;
     border-bottom-left-radius: 4px;
-}
-
-body.light-mode .message.received {
-    background: #e4e4e7;
-    color: #18181b;
 }
 
 /* Animations */
