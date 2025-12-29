@@ -74,23 +74,3 @@ nav {
 .message {
     animation: fadeIn 0.3s ease-out;
 }
-
-/* Ticker Styles */
-.ticker-content {
-    display: flex;
-    animation: ticker 30s linear infinite;
-    width: fit-content;
-}
-
-.ticker-item {
-    flex-shrink: 0;
-}
-
-@keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-.ticker-wrapper:hover .ticker-content {
-    animation-play-state: paused;
-}

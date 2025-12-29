@@ -33,11 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 2. Initialize Ad Banner
-    if (adBannerLink && adBannerText) {
+    // Static HTML banner used for precise styling control
+    if (adBannerLink) {
         adBannerLink.href = AD_CONFIG.link;
-        adBannerText.innerHTML = AD_CONFIG.template
-            .replace('{name}', `<span class="text-blue-300 font-bold">${AD_CONFIG.name}</span>`)
-            .replace('{timer}', `<span class="ml-2 px-2 py-0.5 bg-blue-500 text-white rounded-full">${AD_CONFIG.timer}</span>`);
     }
 
     // 3. Theme Toggle Removed
