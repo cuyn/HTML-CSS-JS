@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 5. Chat Functionality
-    const chatForm = document.getElementById('chat-form');
+    const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
 
@@ -169,8 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
-    chatForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+    const sendMessage = () => {
         const text = chatInput.value.trim();
         if (text) {
             addMessage(text, 'sent');
@@ -182,6 +181,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const randomResponse = responses[Math.floor(Math.random() * responses.length)];
                 addMessage(randomResponse, 'received');
             }, 1000);
+        }
+    };
+
+    sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
         }
     });
 
