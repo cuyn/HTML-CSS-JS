@@ -1,10 +1,39 @@
-// CONFIGURABLE ADS - Change these to update the banner
-const AD_CONFIG = {
-    name: "@duhannad",
-    link: "https://www.instagram.com/duhannad", // Add any link here
-    timer: "2s",
-    template: "Check out {name} for more updates! {timer}"
-};
+// CONFIGURABLE ADS - The banner will rotate through these every 15s
+const AD_CONFIGS = [
+    {
+        name: "@duhannad",
+        link: "https://www.instagram.com/duhannad",
+        timer: "2s",
+        text: "Check out @duhannad for more updates!"
+    },
+    {
+        name: "@example",
+        link: "https://instagram.com/example",
+        timer: "New",
+        text: "Follow us on Instagram for latest news!"
+    }
+];
+
+let currentAdIndex = 0;
+
+function updateBanners() {
+    const ad = AD_CONFIGS[currentAdIndex];
+    const banners = [
+        { link: document.getElementById('ad-banner-link'), text: document.getElementById('ad-banner-text') },
+        { link: document.getElementById('ad-banner-link-chat'), text: document.querySelector('#ad-banner-link-chat p') }
+    ];
+
+    banners.forEach(b => {
+        if (b.link) b.href = ad.link;
+        if (b.text) b.textContent = ad.text;
+        
+        // Update the badge if it exists
+        const badge = b.link ? b.link.querySelector('span') : null;
+        if (badge) badge.textContent = ad.timer;
+    });
+
+    currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
@@ -33,14 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
-    // 2. Initialize Ad Banner
-    // Static HTML banner used for precise styling control
-    if (adBannerLink) {
-        adBannerLink.href = AD_CONFIG.link;
-    }
-    if (adBannerLinkChat) {
-        adBannerLinkChat.href = AD_CONFIG.link;
-    }
+    // 2. Initialize and Start Ad Rotation
+    updateBanners(); // Set initial ad
+    setInterval(updateBanners, 15000); // Rotate every 15 seconds
 
     // 3. Theme Toggle Removed
     
