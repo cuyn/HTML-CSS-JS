@@ -51,24 +51,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const startNearby = document.getElementById('start-nearby');
     const startRandom = document.getElementById('start-random');
     const exitChat = document.getElementById('exit-chat');
+    const chatSubtitle = document.getElementById('chat-subtitle');
 
-    const openChat = () => {
+    const openChat = (isNearby = false) => {
         if (!selectedGender) {
             alert("Please select your gender first!");
             return;
         }
-        landingPage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
-        // Clear previous messages if any
-        document.getElementById('chat-messages').innerHTML = `
-            <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
-                Connected with a random stranger. Say hi!
-            </div>
-        `;
+
+        const proceedToChat = (distance = null) => {
+            landingPage.classList.add('hidden');
+            chatPage.classList.remove('hidden');
+            
+            // Update subtitle with distance if nearby
+            if (distance) {
+                chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${distance} away`;
+            } else {
+                chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online`;
+            }
+
+            // Clear previous messages
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="self-center bg-zinc-900 text-zinc-500 text-[10px] px-3 py-1 rounded-full border border-zinc-800">
+                    Connected with a ${isNearby ? 'local ' : ''}stranger. Say hi!
+                </div>
+            `;
+        };
+
+        if (isNearby) {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            // Show searching feedback
+            startNearby.style.opacity = '0.5';
+            startNearby.querySelector('h3').innerText = "Searching nearby...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Simulate finding someone within 20km
+                    const randomDistance = (Math.random() * 19 + 0.5).toFixed(1); // 0.5km to 19.5km
+                    setTimeout(() => {
+                        startNearby.style.opacity = '1';
+                        startNearby.querySelector('h3').innerText = "Chat Nearby";
+                        proceedToChat(`${randomDistance}km`);
+                    }, 1500);
+                },
+                (error) => {
+                    startNearby.style.opacity = '1';
+                    startNearby.querySelector('h3').innerText = "Chat Nearby";
+                    alert("Unable to retrieve your location. Using random match instead.");
+                    proceedToChat();
+                }
+            );
+        } else {
+            proceedToChat();
+        }
     };
 
-    startNearby.addEventListener('click', openChat);
-    startRandom.addEventListener('click', openChat);
+    startNearby.addEventListener('click', () => openChat(true));
+    startRandom.addEventListener('click', () => openChat(false));
 
     exitChat.addEventListener('click', () => {
         chatPage.classList.add('hidden');
