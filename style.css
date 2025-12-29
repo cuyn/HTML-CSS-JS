@@ -1,5 +1,10 @@
 body {
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+}
+
+.hidden {
+    display: none !important;
 }
 
 .gender-btn.selected {
@@ -21,6 +26,11 @@ body.light-mode {
     color: #18181b;
 }
 
+body.light-mode #landing-page,
+body.light-mode #chat-page {
+    background-color: #f4f4f5;
+}
+
 body.light-mode .bg-zinc-900 {
     background-color: #ffffff;
 }
@@ -33,11 +43,49 @@ body.light-mode .text-zinc-400 {
     color: #71717a;
 }
 
-body.light-mode nav {
+body.light-mode nav,
+body.light-mode header,
+body.light-mode #chat-page header,
+body.light-mode #chat-page .border-t {
     background: rgba(255, 255, 255, 0.8);
-    border-top-color: #e4e4e7;
+    border-color: #e4e4e7;
 }
 
-body.light-mode #theme-toggle:hover {
-    background-color: #f4f4f5;
+/* Chat Bubbles */
+.message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: #2563eb;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.received {
+    align-self: flex-start;
+    background: #27272a;
+    color: #e4e4e7;
+    border-bottom-left-radius: 4px;
+}
+
+body.light-mode .message.received {
+    background: #e4e4e7;
+    color: #18181b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message {
+    animation: fadeIn 0.3s ease-out;
 }
