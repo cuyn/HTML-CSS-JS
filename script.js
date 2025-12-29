@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendMessage = () => {
         const text = chatInput.value.trim();
         if (text) {
+            console.log("Sending message:", text); // Debug log
             addMessage(text, 'sent');
             chatInput.value = '';
 
@@ -184,12 +185,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    sendButton.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+    if (sendButton) {
+        sendButton.addEventListener('click', (e) => {
+            e.preventDefault();
             sendMessage();
-        }
-    });
+        });
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 
     // 6. Online Count Simulation
     setInterval(() => {
