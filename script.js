@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.type === 'disconnected') {
                 addStatusMessage("Partner disconnected.");
             } else if (data.type === 'skipped') {
-                addStatusMessage("Your partner skipped you. Finding someone else...");
+                addStatusMessage("User skipped you. Finding someone else...");
                 setTimeout(() => findPartner(), 1500);
             }
         };
