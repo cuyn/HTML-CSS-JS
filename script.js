@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addStatusMessage = (text) => {
         if (chatMessages) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center";
+            msgDiv.className = "self-center bg-amber-500/20 text-amber-500 text-xs font-medium px-4 py-2 rounded-2xl border border-amber-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-amber-500/10";
             msgDiv.textContent = text;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -158,13 +158,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const findPartner = () => {
         if (!socket) initWebSocket();
         
+        chatMessages.innerHTML = "";
+        const searchMsg = addStatusMessage("Searching for a partner...");
+        
+        setTimeout(() => {
+            if (searchMsg && searchMsg.parentNode) {
+                searchMsg.textContent = "We are searching, please wait...";
+            }
+        }, 3000);
+
         // Wait for socket to be open if it's new
         if (socket.readyState === WebSocket.OPEN) {
-            chatMessages.innerHTML = "";
             socket.send(JSON.stringify({ type: 'find_partner' }));
         } else {
             socket.onopen = () => {
-                chatMessages.innerHTML = "";
                 socket.send(JSON.stringify({ type: 'find_partner' }));
             };
         }
