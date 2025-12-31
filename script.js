@@ -235,10 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (nextChat) {
-        nextChat.addEventListener('click', () => {
+    const nextChatBtn = document.getElementById('next-chat');
+    if (nextChatBtn) {
+        nextChatBtn.addEventListener('click', () => {
             console.log("Next chat button clicked");
-            findPartner();
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'next' }));
+            }
         });
     }
 
