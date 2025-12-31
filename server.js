@@ -38,6 +38,10 @@ wss.on('connection', (ws) => {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
                 ws.partner.send(JSON.stringify({ type: 'message', text: data.text }));
             }
+        } else if (data.type === 'typing') {
+            if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
+                ws.partner.send(JSON.stringify({ type: 'typing' }));
+            }
         } else if (data.type === 'next') {
             if (ws.partner) {
                 ws.partner.send(JSON.stringify({ type: 'disconnected' }));

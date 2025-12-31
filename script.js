@@ -135,7 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     partnerName.innerText = `Anonymous ${partnerGender}`;
                 }
             } else if (data.type === 'message') {
+                removeTypingIndicator();
                 addMessage(data.text, 'received');
+            } else if (data.type === 'typing') {
+                showTypingIndicator();
             } else if (data.type === 'disconnected') {
                 addStatusMessage("Partner disconnected.");
             }
@@ -164,11 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const openChat = (isNearby = false) => {
-        if (!selectedGender) {
-            alert("Please select your gender first!");
-            return;
-        }
-
         if (isNearby) {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by your browser.");
@@ -235,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Messaging Logic
     const addMessage = (text, type = 'sent') => {
         if (chatMessages) {
+            removeTypingIndicator();
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${type}`;
             msgDiv.textContent = text;
@@ -242,6 +241,32 @@ document.addEventListener('DOMContentLoaded', () => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     };
+
+    const removeTypingIndicator = () => {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    };
+
+    const showTypingIndicator = () => {
+        if (document.getElementById('typing-indicator')) return;
+        if (chatMessages) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'typing-indicator';
+            msgDiv.className = "message received italic text-zinc-500 flex items-center gap-1";
+            msgDiv.innerHTML = `typing<span class="flex gap-0.5"><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></span><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.2s]"></span><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.4s]"></span></span>`;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    };
+
+    let typingTimeout = null;
+    if (chatInput) {
+        chatInput.addEventListener('input', () => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'typing' }));
+            }
+        });
+    }
 
     const sendMessage = () => {
         console.log("sendMessage called");
