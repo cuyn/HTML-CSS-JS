@@ -44,17 +44,23 @@ wss.on('connection', (ws) => {
             }
         } else if (data.type === 'next') {
             if (ws.partner) {
-                ws.partner.send(JSON.stringify({ type: 'disconnected' }));
+                ws.partner.send(JSON.stringify({ type: 'skipped' }));
                 ws.partner.partner = null;
                 ws.partner = null;
             }
-            // Logic to find new partner
+            
+            // Re-match logic: Look for someone waiting
             if (waitingUsers.length > 0) {
                 const partner = waitingUsers.shift();
-                ws.partner = partner;
-                partner.partner = ws;
-                ws.send(JSON.stringify({ type: 'connected', partnerId: partner.id }));
-                partner.send(JSON.stringify({ type: 'connected', partnerId: ws.id }));
+                if (partner.readyState === WebSocket.OPEN) {
+                    ws.partner = partner;
+                    partner.partner = ws;
+                    ws.send(JSON.stringify({ type: 'connected', partnerId: partner.id }));
+                    partner.send(JSON.stringify({ type: 'connected', partnerId: ws.id }));
+                } else {
+                    waitingUsers.push(ws);
+                    ws.send(JSON.stringify({ type: 'searching' }));
+                }
             } else {
                 waitingUsers.push(ws);
                 ws.send(JSON.stringify({ type: 'searching' }));

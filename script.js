@@ -129,7 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 3000);
             } else if (data.type === 'connected') {
                 chatMessages.innerHTML = "";
-                addStatusMessage("Connected with a real person! Say hi!");
+                const msgDiv = document.createElement('div');
+                msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
+                msgDiv.textContent = "Connected with a real person! Say hi!";
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
                 if (partnerName) {
                     const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
                     partnerName.innerText = `Anonymous ${partnerGender}`;
@@ -141,6 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showTypingIndicator();
             } else if (data.type === 'disconnected') {
                 addStatusMessage("Partner disconnected.");
+            } else if (data.type === 'skipped') {
+                addStatusMessage("Your partner skipped you. Finding someone else...");
+                setTimeout(() => findPartner(), 1500);
             }
         };
 
