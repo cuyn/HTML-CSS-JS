@@ -99,11 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Navigation & Chat Logic
     const addStatusMessage = (text) => {
         if (chatMessages) {
-            const existingSearching = Array.from(chatMessages.querySelectorAll('.status-msg')).find(el => el.textContent === "Searching for a partner...");
-            if (text === "Searching for a partner..." && existingSearching) return;
-
             const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse status-msg";
+            msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[10px] px-4 py-2 rounded-2xl border border-amber-500/20 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center";
             msgDiv.textContent = text;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
