@@ -1,14 +1,9 @@
 // CONFIGURABLE ADS - The banner will rotate through these every 15s
 const AD_CONFIGS = [
     {
-        name: "@duhannad",
-        link: "https://www.instagram.com/duhannad",
-        text: "Check out @duhannad for more updates!"
-    },
-    {
-        name: "@example",
-        link: "https://instagram.com/example",
-        text: "Follow us on Instagram for latest news!"
+        name: "@chawaniiy",
+        link: "https://www.instagram.com/chawaniiy?igsh=MXd4N3I0ZGQ3ajVzYg==",
+        text: "Check out our Instagram @chawaniiy!"
     }
 ];
 
