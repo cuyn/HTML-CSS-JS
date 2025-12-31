@@ -111,66 +111,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let peer = null;
-    let conn = null;
-    let myId = null;
+    let socket = null;
 
-    const initPeer = () => {
-        if (peer) return;
-        peer = new Peer();
-        peer.on('open', (id) => {
-            myId = id;
-            console.log('My peer ID is: ' + id);
-        });
-        peer.on('connection', (connection) => {
-            if (conn) {
-                connection.close();
-                return;
-            }
-            conn = connection;
-            setupConnection();
-        });
-    };
+    const initWebSocket = () => {
+        if (socket) return;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        socket = new WebSocket(`${protocol}//${host}`);
 
-    const setupConnection = () => {
-        conn.on('open', () => {
-            chatMessages.innerHTML = "";
-            addStatusMessage("Connected with a real person! Say hi!");
-            if (partnerName) {
-                const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
-                partnerName.innerText = `Anonymous ${partnerGender}`;
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'searching') {
+                addStatusMessage("Searching for a partner...");
+                setTimeout(() => {
+                    const msg = Array.from(chatMessages.querySelectorAll('.status-msg')).find(el => el.textContent === "Searching for a partner...");
+                    if (msg) msg.textContent = "We are searching, please wait...";
+                }, 3000);
+            } else if (data.type === 'connected') {
+                chatMessages.innerHTML = "";
+                addStatusMessage("Connected with a real person! Say hi!");
+                if (partnerName) {
+                    const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
+                    partnerName.innerText = `Anonymous ${partnerGender}`;
+                }
+            } else if (data.type === 'message') {
+                addMessage(data.text, 'received');
+            } else if (data.type === 'disconnected') {
+                addStatusMessage("Partner disconnected.");
             }
-        });
-        conn.on('data', (data) => {
-            addMessage(data, 'received');
-        });
-        conn.on('close', () => {
-            addStatusMessage("Partner disconnected.");
-            conn = null;
-        });
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket disconnected");
+            socket = null;
+        };
     };
 
     const findPartner = () => {
-        if (!peer) initPeer();
-        if (conn) {
-            conn.close();
-            conn = null;
-        }
-        chatMessages.innerHTML = "";
-        addStatusMessage("Searching for a partner...");
-
-        // In a real production app, you'd use a signaling server to match IDs.
-        // For this demo, we'll try to connect to a "lobby" or simulated wait.
-        // Since we don't have a backend list of IDs, we'll simulate the "searching" state.
-        // Real P2P matching requires a broker/server to exchange IDs.
+        if (!socket) initWebSocket();
         
-        setTimeout(() => {
-            if (!conn) {
-                const msg = chatMessages.querySelector('.status-msg');
-                if (msg) msg.textContent = "We are searching, please wait...";
-            }
-        }, 3000);
+        // Wait for socket to be open if it's new
+        if (socket.readyState === WebSocket.OPEN) {
+            chatMessages.innerHTML = "";
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        } else {
+            socket.onopen = () => {
+                chatMessages.innerHTML = "";
+                socket.send(JSON.stringify({ type: 'find_partner' }));
+            };
+        }
     };
+
 
     const openChat = (isNearby = false) => {
         if (!selectedGender) {
@@ -254,17 +245,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sendMessage = () => {
         console.log("sendMessage called");
-        if (chatInput) {
+        if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
             const text = chatInput.value.trim();
             if (text) {
-                if (conn && conn.open) {
-                    conn.send(text);
-                    addMessage(text, 'sent');
-                    chatInput.value = '';
-                } else {
-                    addStatusMessage("No one is connected yet.");
-                }
+                socket.send(JSON.stringify({ type: 'message', text: text }));
+                addMessage(text, 'sent');
+                chatInput.value = '';
             }
+        } else {
+            addStatusMessage("No one is connected yet.");
         }
     };
 
