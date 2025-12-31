@@ -252,8 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatMessages) {
             const msgDiv = document.createElement('div');
             msgDiv.id = 'typing-indicator';
-            msgDiv.className = "message received italic text-zinc-500 flex items-center gap-1";
-            msgDiv.innerHTML = `typing<span class="flex gap-0.5"><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></span><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.2s]"></span><span class="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:0.4s]"></span></span>`;
+            msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2 animate-fadeIn";
+            msgDiv.innerHTML = `
+                <div class="flex gap-1">
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s]"></span>
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></span>
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></span>
+                </div>
+            `;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
