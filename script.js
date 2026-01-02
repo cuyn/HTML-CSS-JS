@@ -94,6 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Navigation & Chat Logic
     const addStatusMessage = (text) => {
         if (chatMessages) {
+            // Remove any existing status messages to prevent duplicates
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => msg.remove());
+
             const msgDiv = document.createElement('div');
             msgDiv.className = "self-center bg-amber-500/20 text-amber-500 text-xs font-medium px-4 py-2 rounded-2xl border border-amber-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-amber-500/10";
             msgDiv.textContent = text;
