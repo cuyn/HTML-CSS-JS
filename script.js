@@ -319,6 +319,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const addErrorMessage = (text) => {
+        if (chatMessages) {
+            // Remove any existing status messages to prevent duplicates
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => msg.remove());
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msgDiv;
+        }
+    };
+
     const sendMessage = () => {
         console.log("sendMessage called");
         if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
@@ -327,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Link detection regex
                 const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
                 if (urlPattern.test(text)) {
-                    addStatusMessage("Links are not allowed for safety reasons.");
+                    addErrorMessage("Links are not allowed for safety reasons.");
                     chatInput.value = '';
                     return;
                 }
