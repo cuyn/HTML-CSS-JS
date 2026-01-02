@@ -3,7 +3,7 @@ const AD_CONFIGS = [
     {
         name: "@chawaniiy",
         link: "https://www.instagram.com/chawaniiy?igsh=MXd4N3I0ZGQ3ajVzYg==",
-        text: "Check out our Instagram @chawaniiy!"
+        text: "Please be respectful and kind. Keep the conversation civil and friendly!"
     }
 ];
 
