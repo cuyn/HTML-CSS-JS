@@ -339,6 +339,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
             const text = chatInput.value.trim();
             if (text) {
+                // Clear any existing error/status messages when sending a new message
+                const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+                existingMsgs.forEach(msg => msg.remove());
+
                 // Link detection regex
                 const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
                 if (urlPattern.test(text)) {
