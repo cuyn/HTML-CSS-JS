@@ -370,15 +370,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return;
 
         // Add static stars
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 60; i++) {
             const star = document.createElement('div');
             star.className = 'star';
-            const size = Math.random() * 2 + 1;
+            const size = Math.random() * 1.5 + 0.5;
             star.style.width = `${size}px`;
             star.style.height = `${size}px`;
             star.style.left = `${Math.random() * 100}%`;
             star.style.top = `${Math.random() * 100}%`;
-            star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+            star.style.setProperty('--duration', `${Math.random() * 4 + 3}s`);
             container.appendChild(star);
         }
 
@@ -386,15 +386,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const createMeteor = () => {
             const meteor = document.createElement('div');
             meteor.className = 'meteor';
-            meteor.style.left = `${Math.random() * 100 + 20}%`;
-            meteor.style.top = `${Math.random() * 40}%`;
-            meteor.style.setProperty('--duration', `${Math.random() * 2 + 2}s`);
+            meteor.style.left = `${Math.random() * 100 + 40}%`;
+            meteor.style.top = `${Math.random() * 30}%`;
+            meteor.style.setProperty('--duration', `${Math.random() * 1.5 + 1}s`);
             container.appendChild(meteor);
             
-            setTimeout(() => meteor.remove(), 5000);
+            setTimeout(() => meteor.remove(), 3000);
         };
 
-        setInterval(createMeteor, 4000); // One meteor every 4 seconds
+        // Randomized meteor timing
+        const scheduleMeteor = () => {
+            const delay = Math.random() * 8000 + 4000;
+            setTimeout(() => {
+                createMeteor();
+                scheduleMeteor();
+            }, delay);
+        };
+        scheduleMeteor();
     };
 
     initBackground();
