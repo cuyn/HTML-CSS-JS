@@ -127,6 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatMessages.appendChild(msgDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
+                if (chatInput) {
+                    chatInput.disabled = false;
+                    chatInput.placeholder = "Type a message...";
+                }
+                if (sendButton) {
+                    sendButton.disabled = false;
+                }
+
                 if (partnerName) {
                     const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
                     partnerName.innerText = `Anonymous ${partnerGender}`;
@@ -136,11 +144,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessage(data.text, 'received');
             } else if (data.type === 'typing') {
                 showTypingIndicator();
-            } else if (data.type === 'disconnected') {
-                addStatusMessage("Partner disconnected.");
-            } else if (data.type === 'skipped') {
-                addStatusMessage("User skipped you. Finding someone else...");
-                setTimeout(() => findPartner(), 1500);
+            } else if (data.type === 'disconnected' || data.type === 'skipped') {
+                if (chatInput) {
+                    chatInput.disabled = true;
+                    chatInput.placeholder = "Partner left. Searching...";
+                }
+                if (sendButton) {
+                    sendButton.disabled = true;
+                }
+                if (data.type === 'disconnected') {
+                    addStatusMessage("Partner disconnected.");
+                } else {
+                    addStatusMessage("User skipped you. Finding someone else...");
+                    setTimeout(() => findPartner(), 1500);
+                }
             }
         };
 
@@ -156,6 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.innerHTML = "";
         const searchMsg = addStatusMessage("Searching for a partner...");
         
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = "Searching for partner...";
+        }
+        if (sendButton) {
+            sendButton.disabled = true;
+        }
+
         setTimeout(() => {
             if (searchMsg && searchMsg.parentNode) {
                 searchMsg.textContent = "We are searching, please wait...";
