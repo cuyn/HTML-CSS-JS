@@ -136,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (partnerName) {
-                    const partnerGender = Math.random() > 0.5 ? '👦' : '👧';
-                    partnerName.innerText = `Anonymous ${partnerGender}`;
+                    partnerName.innerText = `Anonymous`;
                 }
             } else if (data.type === 'message') {
                 removeTypingIndicator();
