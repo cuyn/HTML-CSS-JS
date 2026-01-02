@@ -22,10 +22,18 @@ function updateBanners() {
     const bannerLinkChat = document.getElementById('ad-banner-link-chat');
     const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
 
+    // Add fade-in class for smooth transition
+    [bannerText, bannerTextChat].forEach(el => {
+        if (el) {
+            el.classList.remove('ad-fade-in');
+            void el.offsetWidth; // Trigger reflow
+            el.classList.add('ad-fade-in');
+            el.textContent = ad.text;
+        }
+    });
+
     if (bannerLink) bannerLink.href = ad.link;
-    if (bannerText) bannerText.textContent = ad.text;
     if (bannerLinkChat) bannerLinkChat.href = ad.link;
-    if (bannerTextChat) bannerTextChat.textContent = ad.text;
 
     currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
     countdownSeconds = 15; // Reset countdown

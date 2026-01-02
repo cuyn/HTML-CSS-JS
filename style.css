@@ -151,14 +151,24 @@ nav {
     }
 }
 
-/* Ticker Animation */
+/* Ticker Animation - Slower and smoother */
 .ticker-content {
-    animation: ticker-smooth 25s linear infinite;
+    animation: ticker-smooth 40s linear infinite;
 }
 
 @keyframes ticker-smooth {
     0% { transform: translateX(0); }
-    100% { transform: translateX(-200%); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Ad Transition Animation */
+.ad-fade-in {
+    animation: adFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes adFadeIn {
+    0% { opacity: 0; transform: translateY(5px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
 #ad-banner-link:hover .ticker-content,
