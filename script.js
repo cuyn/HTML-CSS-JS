@@ -3,7 +3,7 @@ const AD_CONFIGS = [
     {
         name: "Advertise",
         link: "https://www.instagram.com/chawaniiy?igsh=MXd4N3I0ZGQ3ajVzYg==",
-        text: "Advertise here? DM: @chawaniiy"
+        text: "BO REKLAME DM US"
     }
 ];
 
