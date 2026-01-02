@@ -351,4 +351,39 @@ document.addEventListener('DOMContentLoaded', () => {
             count.innerText = Math.max(100, current + change);
         }
     }, 5000);
+
+    // 8. Background Animation (Stars & Meteors)
+    const initBackground = () => {
+        const container = document.querySelector('.stars-container');
+        if (!container) return;
+
+        // Add static stars
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+            container.appendChild(star);
+        }
+
+        // Add meteors periodically
+        const createMeteor = () => {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.style.left = `${Math.random() * 100 + 20}%`;
+            meteor.style.top = `${Math.random() * 40}%`;
+            meteor.style.setProperty('--duration', `${Math.random() * 2 + 2}s`);
+            container.appendChild(meteor);
+            
+            setTimeout(() => meteor.remove(), 5000);
+        };
+
+        setInterval(createMeteor, 4000); // One meteor every 4 seconds
+    };
+
+    initBackground();
 });

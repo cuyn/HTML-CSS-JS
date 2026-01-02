@@ -94,6 +94,63 @@ nav {
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Home Page Background Animation */
+#home-screen {
+    position: relative;
+    overflow: hidden;
+}
+
+.stars-container {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.5;
+    animation: twinkle var(--duration) infinite ease-in-out;
+}
+
+.meteor {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    opacity: 0;
+    filter: drop-shadow(0 0 5px white);
+    animation: meteor-fall var(--duration) infinite linear;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes meteor-fall {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(-45deg) scaleX(0);
+    }
+    10% {
+        opacity: 1;
+        transform: translate(-10px, 10px) rotate(-45deg) scaleX(10);
+    }
+    30% {
+        opacity: 0;
+        transform: translate(-200px, 200px) rotate(-45deg) scaleX(20);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-200px, 200px) rotate(-45deg) scaleX(20);
+    }
+}
+
 /* Ticker Animation */
 .ticker-content {
     animation: ticker-smooth 25s linear infinite;
