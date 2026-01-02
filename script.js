@@ -324,6 +324,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
             const text = chatInput.value.trim();
             if (text) {
+                // Link detection regex
+                const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
+                if (urlPattern.test(text)) {
+                    addStatusMessage("Links are not allowed for safety reasons.");
+                    chatInput.value = '';
+                    return;
+                }
+                
                 socket.send(JSON.stringify({ type: 'message', text: text }));
                 addMessage(text, 'sent');
                 chatInput.value = '';
