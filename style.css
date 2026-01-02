@@ -148,16 +148,20 @@ nav {
     }
 }
 
-/* Slower and smoother ticker */
+/* Ad Banner Styling - Static approach */
 .ticker-content {
-    animation: ticker-smooth 60s linear infinite;
+    animation: none !important;
     display: flex;
-    gap: 4rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
-@keyframes ticker-smooth {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+.ticker-content span {
+    white-space: normal;
+    text-align: center;
+    display: block;
+    width: 100%;
 }
 
 /* Ad Transition Animation */
