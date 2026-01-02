@@ -1,4 +1,4 @@
-// CONFIGURABLE ADS - The banner will rotate through these every 10s
+// CONFIGURABLE ADS - The banner will rotate through these every 15s
 const AD_CONFIGS = [
     {
         name: "Respect",
@@ -13,7 +13,7 @@ const AD_CONFIGS = [
 ];
 
 let currentAdIndex = 0;
-let countdownSeconds = 10;
+let countdownSeconds = 15;
 
 function updateBanners() {
     const ad = AD_CONFIGS[currentAdIndex];
@@ -28,7 +28,7 @@ function updateBanners() {
     if (bannerTextChat) bannerTextChat.textContent = ad.text;
 
     currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
-    countdownSeconds = 10; // Reset countdown
+    countdownSeconds = 15; // Reset countdown
 }
 
 function startCountdown() {
@@ -36,7 +36,6 @@ function startCountdown() {
         countdownSeconds--;
         if (countdownSeconds < 0) {
             updateBanners();
-            countdownSeconds = 10;
         }
         
         const badges = [
