@@ -1,9 +1,14 @@
-// CONFIGURABLE ADS - The banner will rotate through these every 15s
+// CONFIGURABLE ADS - The banner will rotate through these every 10s
 const AD_CONFIGS = [
     {
-        name: "@chawaniiy",
+        name: "Respect",
         link: "https://www.instagram.com/chawaniiy?igsh=MXd4N3I0ZGQ3ajVzYg==",
         text: "Please be respectful and kind. Keep the conversation civil and friendly!"
+    },
+    {
+        name: "Advertise",
+        link: "https://www.instagram.com/chawaniiy?igsh=MXd4N3I0ZGQ3ajVzYg==",
+        text: "Want to see your ad here? Contact us on our Instagram!"
     }
 ];
 
