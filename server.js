@@ -71,8 +71,17 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(user => user !== ws);
         if (ws.partner) {
-            ws.partner.send(JSON.stringify({ type: 'disconnected' }));
-            ws.partner.partner = null;
+            const p = ws.partner;
+            p.partner = null;
+            p.send(JSON.stringify({ type: 'disconnected' }));
+            
+            // Automatically put the remaining partner back in the queue
+            setTimeout(() => {
+                if (p.readyState === WebSocket.OPEN && !p.partner) {
+                    waitingUsers.push(p);
+                    p.send(JSON.stringify({ type: 'searching' }));
+                }
+            }, 1000);
         }
     });
 });
