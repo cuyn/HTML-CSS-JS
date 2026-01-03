@@ -120,11 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (socket) return;
         
         // IMPORTANT: Use the public URL provided by Replit for the backend
-        const replitUrl = 'chawani.replit.app';
+        const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
         
         // Determine the correct host
-        // We prioritize the .replit.app or .replit.dev domain for WebSocket
-        const host = replitUrl;
+        const isReplit = window.location.hostname.includes('replit.dev');
+        const host = isReplit ? window.location.host : replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
         socket = new WebSocket(`wss://${host}`);
