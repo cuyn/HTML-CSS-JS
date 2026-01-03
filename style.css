@@ -135,7 +135,7 @@ nav {
     width: 35px;
     height: 35px;
     background: radial-gradient(circle at 30% 30%, #f4f4f4, #d1d1d1, #a1a1a1);
-    top: 15%;
+    top: 25%; /* Moved down from 15% */
     right: 15%;
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset -5px -5px 10px rgba(0,0,0,0.4);
     filter: blur(0.5px);
