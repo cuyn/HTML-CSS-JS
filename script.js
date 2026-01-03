@@ -119,15 +119,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const initWebSocket = () => {
         if (socket) return;
         
-        // IMPORTANT: For Netlify deployment, you must point to your Replit backend URL
+        // IMPORTANT: Use the public URL provided by Replit for the backend
         const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
         
-        // If we are on Netlify or any other external domain, use the Replit backend
+        // Determine the correct host and protocol
         const isReplit = window.location.hostname.includes('replit.dev');
         const host = isReplit ? window.location.host : replitUrl;
-        const protocol = 'wss:';
         
-        socket = new WebSocket(`${protocol}//${host}`);
+        // WebSockets on Replit work through the same port (5000/proxy)
+        socket = new WebSocket(`wss://${host}`);
+
+        socket.onopen = () => {
+            console.log("WebSocket connected to:", host);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
