@@ -123,12 +123,14 @@ nav {
     border-radius: 50%;
     z-index: -1;
     pointer-events: none;
-    animation: float-slow var(--float-duration, 20s) ease-in-out infinite;
+    animation: float-random var(--float-duration, 30s) ease-in-out infinite;
 }
 
-@keyframes float-slow {
-    0%, 100% { transform: translate(0, 0) rotate(var(--base-rotation, 0deg)); }
-    50% { transform: translate(var(--float-x, 15px), var(--float-y, -15px)) rotate(var(--base-rotation, 0deg)); }
+@keyframes float-random {
+    0% { transform: translate(0, 0) rotate(var(--base-rotation, 0deg)); }
+    33% { transform: translate(var(--float-x1, 50px), var(--float-y1, 30px)) rotate(var(--base-rotation, 0deg)); }
+    66% { transform: translate(var(--float-x2, -40px), var(--float-y2, 60px)) rotate(var(--base-rotation, 0deg)); }
+    100% { transform: translate(0, 0) rotate(var(--base-rotation, 0deg)); }
 }
 
 .sun {
@@ -139,22 +141,22 @@ nav {
     right: 25%;
     box-shadow: 0 0 20px rgba(255, 140, 0, 0.3), inset -2px -2px 8px rgba(0,0,0,0.3);
     filter: blur(0.5px);
-    --float-duration: 28s;
-    --float-x: -10px;
-    --float-y: 10px;
+    --float-duration: 40s;
+    --float-x1: 150px; --float-y1: 100px;
+    --float-x2: -150px; --float-y2: -100px;
 }
 
 .moon {
     width: 25px;
     height: 25px;
     background: radial-gradient(circle at 30% 30%, #f4f4f4, #d1d1d1, #a1a1a1);
-    top: 30%; /* Moved down slightly */
+    top: 30%;
     right: 15%;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset -3px -3px 8px rgba(0,0,0,0.4);
     filter: blur(0.5px);
-    --float-duration: 25s;
-    --float-x: 10px;
-    --float-y: 10px;
+    --float-duration: 35s;
+    --float-x1: -150px; --float-y1: 100px;
+    --float-x2: 150px; --float-y2: -100px;
 }
 
 /* Craters on the moon */
@@ -180,9 +182,9 @@ nav {
     top: 65%;
     left: 10%;
     box-shadow: inset -5px -5px 10px rgba(0,0,0,0.9), 0 0-8px rgba(75, 156, 211, 0.2);
-    --float-duration: 18s;
-    --float-x: -20px;
-    --float-y: 15px;
+    --float-duration: 45s;
+    --float-x1: 100px; --float-y1: -30px;
+    --float-x2: -50px; --float-y2: 60px;
 }
 
 .mars {
@@ -192,9 +194,9 @@ nav {
     top: 25%;
     left: 35%;
     box-shadow: inset -4px -4px 8px rgba(0,0,0,0.9);
-    --float-duration: 15s;
-    --float-x: 25px;
-    --float-y: -10px;
+    --float-duration: 30s;
+    --float-x1: -40px; --float-y1: 80px;
+    --float-x2: 50px; --float-y2: -30px;
 }
 
 .jupiter {
@@ -205,9 +207,9 @@ nav {
     right: 5%;
     background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 5px, transparent 5px, transparent 10px);
     box-shadow: inset -8px -8px 15px rgba(0,0,0,0.9);
-    --float-duration: 30s;
-    --float-x: 15px;
-    --float-y: 20px;
+    --float-duration: 50s;
+    --float-x1: -90px; --float-y1: -40px;
+    --float-x2: 70px; --float-y2: 30px;
 }
 
 .saturn-container {
@@ -219,9 +221,9 @@ nav {
     align-items: center;
     justify-content: center;
     --base-rotation: 20deg;
-    --float-duration: 22s;
-    --float-x: -15px;
-    --float-y: -20px;
+    --float-duration: 38s;
+    --float-x1: 60px; --float-y1: -70px;
+    --float-x2: -80px; --float-y2: 40px;
 }
 
 .saturn-ring {
