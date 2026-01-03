@@ -2,7 +2,7 @@
 const AD_CONFIGS = [
     {
         name: "Advertise",
-        link: "https://db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev",
+        link: "https://www.instagram.com/chawaniiy?igsh=MWgwbDFuYjFraDdpbw%3D%3D&utm_source=qr",
         text: "BO REKLAME DM US: @chawaniiy"
     }
 ];
