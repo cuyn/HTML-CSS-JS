@@ -131,17 +131,30 @@ nav {
     50% { transform: translate(var(--float-x, 15px), var(--float-y, -15px)) rotate(var(--base-rotation, 0deg)); }
 }
 
-.sun {
-    width: 40px;
-    height: 40px;
-    background: radial-gradient(circle at 30% 30%, #fff700, #ff8c00, #ff4500);
-    top: 15%; /* Moved down from -15px */
-    right: 15%; /* Moved in from -15px */
-    box-shadow: 0 0 30px rgba(255, 140, 0, 0.3), inset -3px -3px 10px rgba(0,0,0,0.3);
-    filter: blur(1px);
+.moon {
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle at 30% 30%, #f4f4f4, #d1d1d1, #a1a1a1);
+    top: 15%;
+    right: 15%;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset -5px -5px 10px rgba(0,0,0,0.4);
+    filter: blur(0.5px);
     --float-duration: 25s;
     --float-x: 10px;
     --float-y: 10px;
+}
+
+/* Craters on the moon */
+.moon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 50%;
+    top: 20%;
+    left: 40%;
+    box-shadow: 12px 8px 0 rgba(0,0,0,0.1), 5px 18px 0 rgba(0,0,0,0.1);
 }
 
 .earth {
