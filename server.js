@@ -7,6 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+// Serve static files from 'public' directory
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(express.static(__dirname));
 
 let waitingUsers = [];
