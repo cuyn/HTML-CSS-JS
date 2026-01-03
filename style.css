@@ -131,13 +131,26 @@ nav {
     50% { transform: translate(var(--float-x, 15px), var(--float-y, -15px)) rotate(var(--base-rotation, 0deg)); }
 }
 
+.sun {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 30% 30%, #fff700, #ff8c00, #ff4500);
+    top: 35%;
+    right: 25%;
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.3), inset -2px -2px 8px rgba(0,0,0,0.3);
+    filter: blur(0.5px);
+    --float-duration: 28s;
+    --float-x: -10px;
+    --float-y: 10px;
+}
+
 .moon {
-    width: 35px;
-    height: 35px;
+    width: 25px;
+    height: 25px;
     background: radial-gradient(circle at 30% 30%, #f4f4f4, #d1d1d1, #a1a1a1);
-    top: 25%; /* Moved down from 15% */
+    top: 30%; /* Moved down slightly */
     right: 15%;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset -5px -5px 10px rgba(0,0,0,0.4);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset -3px -3px 8px rgba(0,0,0,0.4);
     filter: blur(0.5px);
     --float-duration: 25s;
     --float-x: 10px;
