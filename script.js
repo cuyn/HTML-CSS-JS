@@ -120,10 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (socket) return;
         
         // IMPORTANT: For Netlify deployment, you must point to your Replit backend URL
-        // Replace 'your-app-name.your-username.repl.co' with your actual Replit URL
         const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
         
-        // If we are on Netlify (not on Replit itself), use the Replit backend
+        // If we are on Netlify or any other external domain, use the Replit backend
         const isReplit = window.location.hostname.includes('replit.dev');
         const host = isReplit ? window.location.host : replitUrl;
         const protocol = 'wss:';
