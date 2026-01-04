@@ -305,9 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 replyingTo = text;
                 const preview = document.getElementById('reply-preview');
                 const previewText = document.getElementById('reply-text');
+                const chatInputArea = document.querySelector('.chat-input-area');
                 if (preview && previewText) {
                     previewText.textContent = text;
                     preview.classList.add('active');
+                    if (chatInputArea) chatInputArea.classList.add('has-reply');
                 }
                 if (chatInput) chatInput.focus();
                 if (window.lucide) lucide.createIcons();
@@ -328,7 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelReplyBtn.addEventListener('click', () => {
             replyingTo = null;
             const preview = document.getElementById('reply-preview');
+            const chatInputArea = document.querySelector('.chat-input-area');
             if (preview) preview.classList.remove('active');
+            if (chatInputArea) chatInputArea.classList.remove('has-reply');
         });
     }
 
@@ -385,7 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Clear reply state
                 replyingTo = null;
                 const preview = document.getElementById('reply-preview');
+                const chatInputArea = document.querySelector('.chat-input-area');
                 if (preview) preview.classList.remove('active');
+                if (chatInputArea) chatInputArea.classList.remove('has-reply');
                 
                 chatInput.value = '';
             }
