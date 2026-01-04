@@ -294,10 +294,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgDiv.textContent = text;
             }
 
-            // Reply button (visible on hover)
+            // Reply button container (positioned under message)
+            const replyBtnContainer = document.createElement('div');
+            replyBtnContainer.className = 'reply-btn-container';
+            
             const replyBtn = document.createElement('button');
             replyBtn.className = 'reply-btn';
-            replyBtn.innerHTML = '<i data-lucide="reply" class="w-4 h-4"></i>';
+            replyBtn.innerHTML = '<i data-lucide="reply"></i> Reply';
             replyBtn.onclick = () => {
                 replyingTo = text;
                 const preview = document.getElementById('reply-preview');
@@ -310,8 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.lucide) lucide.createIcons();
             };
 
+            replyBtnContainer.appendChild(replyBtn);
             container.appendChild(msgDiv);
-            container.appendChild(replyBtn);
+            container.appendChild(replyBtnContainer);
             chatMessages.appendChild(container);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
