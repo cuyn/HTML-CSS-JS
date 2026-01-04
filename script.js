@@ -56,18 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
 
     // 1. Initialize Elements
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const body = document.body;
-    const adBannerLink = document.getElementById('ad-banner-link');
-    const adBannerLinkChat = document.getElementById('ad-banner-link-chat');
-    const adBannerText = document.getElementById('ad-banner-text');
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startNearby = document.getElementById('start-nearby');
     const startRandom = document.getElementById('start-random');
     const exitChat = document.getElementById('exit-chat');
-    const nextChat = document.getElementById('next-chat');
     const chatSubtitle = document.getElementById('chat-subtitle');
     const partnerName = document.getElementById('partner-name');
     const sendButton = document.getElementById('send-button');
@@ -83,9 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBanners(); 
     startCountdown();
 
-    // 3. Theme Toggle Removed
-    
-    // 4. Gender Selection
+    // 3. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
     let selectedGender = null;
 
@@ -98,10 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. Navigation & Chat Logic
+    // 4. Status Messaging
     const addStatusMessage = (text) => {
         if (chatMessages) {
-            // Remove any existing status messages to prevent duplicates
             const existingMsgs = chatMessages.querySelectorAll('.status-msg');
             existingMsgs.forEach(msg => msg.remove());
 
@@ -114,20 +104,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const addErrorMessage = (text) => {
+        if (chatMessages) {
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => msg.remove());
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msgDiv;
+        }
+    };
+
+    // 5. WebSocket Logic
     let socket = null;
 
     const initWebSocket = () => {
         if (socket) return;
         
-        // IMPORTANT: Use the public URL provided by Replit for the backend
         const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
-        
-        // Determine the correct host
         const isReplit = window.location.hostname.includes('replit.dev');
         const host = isReplit ? window.location.host : replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
-        // Netlify is HTTPS, Replit is HTTPS. Always use WSS for security and compatibility.
         const wsProtocol = 'wss';
         
         try {
@@ -135,11 +136,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
             socket.onopen = () => {
                 console.log("WebSocket connected to:", host);
-                // Clear any error messages if connection is successful
                 const existingMsgs = chatMessages.querySelectorAll('.status-msg');
                 existingMsgs.forEach(msg => {
                     if (msg.textContent.includes("Connection lost")) msg.remove();
                 });
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'searching') {
+                    addStatusMessage("Searching for a partner...");
+                } else if (data.type === 'connected') {
+                    chatMessages.innerHTML = "";
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
+                    msgDiv.textContent = "Connected with a real person! Say hi!";
+                    chatMessages.appendChild(msgDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    if (chatInput) {
+                        chatInput.disabled = false;
+                        chatInput.placeholder = "Type a message...";
+                    }
+                    if (sendButton) sendButton.disabled = false;
+                    if (partnerName) partnerName.innerText = `Anonymous`;
+                } else if (data.type === 'message') {
+                    removeTypingIndicator();
+                    addMessage(data.text, 'received');
+                } else if (data.type === 'typing') {
+                    showTypingIndicator();
+                } else if (data.type === 'disconnected' || data.type === 'skipped') {
+                    if (chatInput) {
+                        chatInput.disabled = true;
+                        chatInput.placeholder = "Partner left. Searching...";
+                    }
+                    if (sendButton) sendButton.disabled = true;
+                    if (data.type === 'disconnected') {
+                        addStatusMessage("Partner disconnected.");
+                    } else {
+                        addStatusMessage("User skipped you. Finding someone else...");
+                        setTimeout(() => findPartner(), 1500);
+                    }
+                }
             };
 
             socket.onerror = (error) => {
@@ -147,106 +185,40 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             socket.onclose = (event) => {
-                console.log("WebSocket closed. Code:", event.code, "Reason:", event.reason);
+                console.log("WebSocket closed. Code:", event.code);
                 socket = null;
-                // Only show error if it wasn't a clean close and we are on chat page
                 if (!chatPage.classList.contains('hidden')) {
                     addErrorMessage("Connection lost. Trying to reconnect...");
-                    setTimeout(initWebSocket, 3000); // Auto-reconnect after 3s
+                    setTimeout(initWebSocket, 3000);
                 }
             };
         } catch (err) {
             console.error("WebSocket construction failed:", err);
-            addErrorMessage("Connection failed. Retrying...");
             setTimeout(initWebSocket, 5000);
         }
     };
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'searching') {
-                addStatusMessage("Searching for a partner...");
-                setTimeout(() => {
-                    const msg = Array.from(chatMessages.querySelectorAll('.status-msg')).find(el => el.textContent === "Searching for a partner...");
-                    if (msg) msg.textContent = "We are searching, please wait...";
-                }, 3000);
-            } else if (data.type === 'connected') {
-                chatMessages.innerHTML = "";
-                const msgDiv = document.createElement('div');
-                msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
-                msgDiv.textContent = "Connected with a real person! Say hi!";
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                if (chatInput) {
-                    chatInput.disabled = false;
-                    chatInput.placeholder = "Type a message...";
-                }
-                if (sendButton) {
-                    sendButton.disabled = false;
-                }
-
-                if (partnerName) {
-                    partnerName.innerText = `Anonymous`;
-                }
-            } else if (data.type === 'message') {
-                removeTypingIndicator();
-                addMessage(data.text, 'received');
-            } else if (data.type === 'typing') {
-                showTypingIndicator();
-            } else if (data.type === 'disconnected' || data.type === 'skipped') {
-                if (chatInput) {
-                    chatInput.disabled = true;
-                    chatInput.placeholder = "Partner left. Searching...";
-                }
-                if (sendButton) {
-                    sendButton.disabled = true;
-                }
-                if (data.type === 'disconnected') {
-                    addStatusMessage("Partner disconnected.");
-                } else {
-                    addStatusMessage("User skipped you. Finding someone else...");
-                    setTimeout(() => findPartner(), 1500);
-                }
-            }
-        };
-
-        socket.onclose = () => {
-            console.log("WebSocket disconnected");
-            socket = null;
-        };
-    };
-
     const findPartner = () => {
-        if (!socket) initWebSocket();
-        
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            initWebSocket();
+            const checkInt = setInterval(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    clearInterval(checkInt);
+                    socket.send(JSON.stringify({ type: 'find_partner' }));
+                }
+            }, 100);
+        } else {
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        }
+
         chatMessages.innerHTML = "";
-        const searchMsg = addStatusMessage("Searching for a partner...");
-        
+        addStatusMessage("Searching for a partner...");
         if (chatInput) {
             chatInput.disabled = true;
             chatInput.placeholder = "Searching for partner...";
         }
-        if (sendButton) {
-            sendButton.disabled = true;
-        }
-
-        setTimeout(() => {
-            if (searchMsg && searchMsg.parentNode) {
-                searchMsg.textContent = "We are searching, please wait...";
-            }
-        }, 3000);
-
-        // Wait for socket to be open if it's new
-        if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'find_partner' }));
-        } else {
-            socket.onopen = () => {
-                socket.send(JSON.stringify({ type: 'find_partner' }));
-            };
-        }
+        if (sendButton) sendButton.disabled = true;
     };
-
 
     const openChat = (isNearby = false) => {
         if (isNearby) {
@@ -254,50 +226,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Geolocation is not supported by your browser.");
                 return;
             }
-
-            if (startNearby) {
-                startNearby.style.opacity = '0.5';
-                const h3 = startNearby.querySelector('h3');
-                if (h3) h3.innerText = "Searching nearby...";
-            }
-
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const randomDistance = (Math.random() * 19 + 0.5).toFixed(1);
-                    if (startNearby) {
-                        startNearby.style.opacity = '1';
-                        const h3 = startNearby.querySelector('h3');
-                        if (h3) h3.innerText = "Chat Nearby";
-                    }
                     if (landingPage) landingPage.classList.add('hidden');
                     if (chatPage) chatPage.classList.remove('hidden');
                     if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
                     findPartner();
                 },
                 (error) => {
-                    if (startNearby) {
-                        startNearby.style.opacity = '1';
-                        const h3 = startNearby.querySelector('h3');
-                        if (h3) h3.innerText = "Chat Nearby";
-                    }
                     alert("Unable to retrieve your location. Using random match instead.");
                     if (landingPage) landingPage.classList.add('hidden');
                     if (chatPage) chatPage.classList.remove('hidden');
-                    if (chatSubtitle) chatSubtitle.innerHTML = "";
                     findPartner();
                 }
             );
         } else {
             if (landingPage) landingPage.classList.add('hidden');
             if (chatPage) chatPage.classList.remove('hidden');
-            if (chatSubtitle) chatSubtitle.innerHTML = "";
             findPartner();
         }
     };
 
     if (startNearby) startNearby.addEventListener('click', () => openChat(true));
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
-
     if (exitChat) {
         exitChat.addEventListener('click', () => {
             if (chatPage) chatPage.classList.add('hidden');
@@ -308,14 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextChatBtn = document.getElementById('next-chat');
     if (nextChatBtn) {
         nextChatBtn.addEventListener('click', () => {
-            console.log("Next chat button clicked");
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ type: 'next' }));
             }
         });
     }
 
-    // 6. Messaging Logic
     const addMessage = (text, type = 'sent') => {
         if (chatMessages) {
             removeTypingIndicator();
@@ -337,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatMessages) {
             const msgDiv = document.createElement('div');
             msgDiv.id = 'typing-indicator';
-            msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2 animate-fadeIn";
+            msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
             msgDiv.innerHTML = `
                 <div class="flex gap-1">
                     <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s]"></span>
@@ -350,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let typingTimeout = null;
     if (chatInput) {
         chatInput.addEventListener('input', () => {
             if (socket && socket.readyState === WebSocket.OPEN) {
@@ -359,64 +308,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const addErrorMessage = (text) => {
-        if (chatMessages) {
-            // Remove any existing status messages to prevent duplicates
-            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-            existingMsgs.forEach(msg => msg.remove());
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
-            msgDiv.textContent = text;
-            chatMessages.appendChild(msgDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            return msgDiv;
-        }
-    };
-
     const sendMessage = () => {
-        console.log("sendMessage called");
         if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
             const text = chatInput.value.trim();
             if (text) {
-                // Clear any existing error/status messages when sending a new message
-                const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-                existingMsgs.forEach(msg => msg.remove());
-
-                // Link detection regex
                 const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
                 if (urlPattern.test(text)) {
-                    addErrorMessage("Links are not allowed for safety reasons.");
+                    addErrorMessage("Links are not allowed.");
                     chatInput.value = '';
                     return;
                 }
-                
                 socket.send(JSON.stringify({ type: 'message', text: text }));
                 addMessage(text, 'sent');
                 chatInput.value = '';
             }
-        } else {
-            addStatusMessage("No one is connected yet.");
         }
     };
 
-    if (sendButton) {
-        sendButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            sendMessage();
-        });
-    }
+    if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
+    if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
 
-    if (chatInput) {
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-    }
-
-    // 7. Online Count Simulation
     setInterval(() => {
         const count = document.getElementById('online-count');
         if (count) {
@@ -426,12 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 5000);
 
-    // 8. Background Animation (Stars & Meteors)
     const initBackground = () => {
         const container = document.querySelector('.stars-container');
         if (!container) return;
-
-        // Add static stars
         for (let i = 0; i < 60; i++) {
             const star = document.createElement('div');
             star.className = 'star';
@@ -443,8 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
             star.style.setProperty('--duration', `${Math.random() * 4 + 3}s`);
             container.appendChild(star);
         }
-
-        // Add meteors periodically
         const createMeteor = () => {
             const meteor = document.createElement('div');
             meteor.className = 'meteor';
@@ -452,20 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
             meteor.style.top = `${Math.random() * 30}%`;
             meteor.style.setProperty('--duration', `${Math.random() * 1.5 + 1}s`);
             container.appendChild(meteor);
-            
             setTimeout(() => meteor.remove(), 3000);
         };
-
-        // Randomized meteor timing
         const scheduleMeteor = () => {
-            const delay = Math.random() * 8000 + 4000;
-            setTimeout(() => {
-                createMeteor();
-                scheduleMeteor();
-            }, delay);
+            setTimeout(() => { createMeteor(); scheduleMeteor(); }, Math.random() * 8000 + 4000);
         };
         scheduleMeteor();
     };
-
     initBackground();
 });
