@@ -124,11 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const initWebSocket = () => {
         if (socket) return;
         
+        // IMPORTANT: Use the public URL provided by Replit for the backend
         const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
+        
+        // Determine the correct host
         const isReplit = window.location.hostname.includes('replit.dev');
         const host = isReplit ? window.location.host : replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
+        // Netlify is HTTPS, Replit is HTTPS. Always use WSS for security and compatibility.
         const wsProtocol = 'wss';
         
         try {
@@ -185,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             socket.onclose = (event) => {
-                console.log("WebSocket closed. Code:", event.code);
+                console.log("WebSocket closed. Code:", event.code, "Reason:", event.reason);
                 socket = null;
                 if (!chatPage.classList.contains('hidden')) {
                     addErrorMessage("Connection lost. Trying to reconnect...");
