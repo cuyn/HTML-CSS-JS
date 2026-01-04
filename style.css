@@ -122,10 +122,11 @@ nav {
 }
 
 .sent-container .reply-btn-container {
-    justify-content: flex-end;
+    display: none;
 }
 
 .received-container .reply-btn-container {
+    display: flex;
     justify-content: flex-start;
 }
 
