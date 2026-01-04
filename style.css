@@ -72,6 +72,20 @@ nav {
     font-size: 14px;
     line-height: 1.4;
     word-wrap: break-word;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.message:active {
+    transform: scale(0.98);
+}
+
+.message-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    position: relative;
 }
 
 .message.sent {
@@ -86,6 +100,83 @@ nav {
     background: #27272a;
     color: #e4e4e7;
     border-bottom-left-radius: 4px;
+}
+
+.reply-context {
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message.sent .reply-context {
+    border-left-color: rgba(255, 255, 255, 0.8);
+}
+
+.reply-preview-bar {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: #18181b;
+    border-top: 1px solid #27272a;
+    padding: 12px 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.reply-preview-bar.active {
+    display: flex;
+}
+
+.reply-preview-content {
+    flex: 1;
+    border-left: 3px solid #ea580c;
+    padding-left: 12px;
+    overflow: hidden;
+}
+
+.reply-preview-text {
+    font-size: 12px;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reply-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 6px;
+    color: white;
+}
+
+.message-container:hover .reply-btn {
+    opacity: 1;
+}
+
+.sent-container .reply-btn {
+    left: -40px;
+}
+
+.received-container .reply-btn {
+    right: -40px;
 }
 
 /* Animations */

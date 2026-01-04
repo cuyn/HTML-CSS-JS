@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (partnerName) partnerName.innerText = `Anonymous`;
                 } else if (data.type === 'message') {
                     removeTypingIndicator();
-                    addMessage(data.text, 'received');
+                    addMessage(data.text, 'received', data.replyTo);
                 } else if (data.type === 'typing') {
                     showTypingIndicator();
                 } else if (data.type === 'disconnected' || data.type === 'skipped') {
@@ -270,16 +270,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const addMessage = (text, type = 'sent') => {
+    let replyingTo = null;
+
+    const addMessage = (text, type = 'sent', replyText = null) => {
         if (chatMessages) {
             removeTypingIndicator();
+            const container = document.createElement('div');
+            container.className = `message-container ${type}-container`;
+            
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${type}`;
-            msgDiv.textContent = text;
-            chatMessages.appendChild(msgDiv);
+            
+            if (replyText) {
+                const replyDiv = document.createElement('div');
+                replyDiv.className = 'reply-context';
+                replyDiv.textContent = replyText;
+                msgDiv.appendChild(replyDiv);
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = text;
+                msgDiv.appendChild(textSpan);
+            } else {
+                msgDiv.textContent = text;
+            }
+
+            // Reply button (visible on hover)
+            const replyBtn = document.createElement('button');
+            replyBtn.className = 'reply-btn';
+            replyBtn.innerHTML = '<i data-lucide="reply" class="w-4 h-4"></i>';
+            replyBtn.onclick = () => {
+                replyingTo = text;
+                const preview = document.getElementById('reply-preview');
+                const previewText = document.getElementById('reply-text');
+                if (preview && previewText) {
+                    previewText.textContent = text;
+                    preview.classList.add('active');
+                }
+                if (chatInput) chatInput.focus();
+                if (window.lucide) lucide.createIcons();
+            };
+
+            container.appendChild(msgDiv);
+            container.appendChild(replyBtn);
+            chatMessages.appendChild(container);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (window.lucide) lucide.createIcons();
         }
     };
+
+    const cancelReplyBtn = document.getElementById('cancel-reply');
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener('click', () => {
+            replyingTo = null;
+            const preview = document.getElementById('reply-preview');
+            if (preview) preview.classList.remove('active');
+        });
+    }
 
     const removeTypingIndicator = () => {
         const indicator = document.getElementById('typing-indicator');
@@ -322,8 +369,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatInput.value = '';
                     return;
                 }
-                socket.send(JSON.stringify({ type: 'message', text: text }));
-                addMessage(text, 'sent');
+                
+                const messageData = { type: 'message', text: text };
+                if (replyingTo) {
+                    messageData.replyTo = replyingTo;
+                }
+                
+                socket.send(JSON.stringify(messageData));
+                addMessage(text, 'sent', replyingTo);
+                
+                // Clear reply state
+                replyingTo = null;
+                const preview = document.getElementById('reply-preview');
+                if (preview) preview.classList.remove('active');
+                
                 chatInput.value = '';
             }
         }
