@@ -127,26 +127,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const host = isReplit ? window.location.host : replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
-        // Add protocol check for production (Netlify uses https, so we need wss)
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        // Force WSS for the specific Replit domain as it requires SSL
-        const wsProtocol = host.includes('replit.dev') ? 'wss' : protocol;
+        // Netlify is HTTPS, Replit is HTTPS. Always use WSS for security and compatibility.
+        const wsProtocol = 'wss';
         
-        socket = new WebSocket(`${wsProtocol}://${host}`);
+        try {
+            socket = new WebSocket(`${wsProtocol}://${host}`);
 
-        socket.onopen = () => {
-            console.log("WebSocket connected to:", host);
-            // Clear any error messages if connection is successful
-            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-            existingMsgs.forEach(msg => {
-                if (msg.textContent.includes("Connection lost")) msg.remove();
-            });
-        };
+            socket.onopen = () => {
+                console.log("WebSocket connected to:", host);
+                // Clear any error messages if connection is successful
+                const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+                existingMsgs.forEach(msg => {
+                    if (msg.textContent.includes("Connection lost")) msg.remove();
+                });
+            };
 
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            addErrorMessage("Connection lost. Trying to reconnect...");
-        };
+            socket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+
+            socket.onclose = (event) => {
+                console.log("WebSocket closed. Code:", event.code, "Reason:", event.reason);
+                socket = null;
+                // Only show error if it wasn't a clean close and we are on chat page
+                if (!chatPage.classList.contains('hidden')) {
+                    addErrorMessage("Connection lost. Trying to reconnect...");
+                    setTimeout(initWebSocket, 3000); // Auto-reconnect after 3s
+                }
+            };
+        } catch (err) {
+            console.error("WebSocket construction failed:", err);
+            addErrorMessage("Connection failed. Retrying...");
+            setTimeout(initWebSocket, 5000);
+        }
+    };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
