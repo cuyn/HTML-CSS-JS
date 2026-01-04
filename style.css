@@ -167,16 +167,38 @@ nav {
     color: white;
 }
 
-.message-container:hover .reply-btn {
+.message-container:hover .reply-btn,
+.message-container:active .reply-btn {
     opacity: 1;
 }
 
 .sent-container .reply-btn {
-    left: -40px;
+    left: -35px;
 }
 
 .received-container .reply-btn {
-    right: -40px;
+    right: -35px;
+}
+
+/* Adjustments for mobile touch targets */
+@media (max-width: 640px) {
+    .reply-btn {
+        opacity: 0.8; /* Make it slightly visible on mobile always or on tap */
+        background: rgba(39, 39, 42, 0.8);
+        padding: 8px;
+    }
+    
+    .sent-container .reply-btn {
+        left: -45px;
+    }
+
+    .received-container .reply-btn {
+        right: -45px;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
 }
 
 /* Animations */
