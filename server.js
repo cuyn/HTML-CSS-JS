@@ -71,19 +71,29 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        // Clean up user from waiting list
         waitingUsers = waitingUsers.filter(user => user !== ws);
+        
         if (ws.partner) {
             const p = ws.partner;
+            // Clear partner reference on both sides
             p.partner = null;
-            p.send(JSON.stringify({ type: 'disconnected' }));
+            ws.partner = null;
             
-            // Automatically put the remaining partner back in the queue
-            setTimeout(() => {
-                if (p.readyState === WebSocket.OPEN && !p.partner) {
-                    waitingUsers.push(p);
-                    p.send(JSON.stringify({ type: 'searching' }));
-                }
-            }, 1000);
+            if (p.readyState === WebSocket.OPEN) {
+                p.send(JSON.stringify({ type: 'disconnected' }));
+                
+                // Automatically put the remaining partner back in the queue
+                setTimeout(() => {
+                    if (p.readyState === WebSocket.OPEN && !p.partner) {
+                        // Avoid duplicate entries in waiting list
+                        if (!waitingUsers.includes(p)) {
+                            waitingUsers.push(p);
+                            p.send(JSON.stringify({ type: 'searching' }));
+                        }
+                    }
+                }, 1000);
+            }
         }
     });
 });

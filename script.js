@@ -127,14 +127,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const host = isReplit ? window.location.host : replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
-        socket = new WebSocket(`wss://${host}`);
+        // Add protocol check for production (Netlify uses https, so we need wss)
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        // Force WSS for the specific Replit domain as it requires SSL
+        const wsProtocol = host.includes('replit.dev') ? 'wss' : protocol;
+        
+        socket = new WebSocket(`${wsProtocol}://${host}`);
 
         socket.onopen = () => {
             console.log("WebSocket connected to:", host);
+            // Clear any error messages if connection is successful
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => {
+                if (msg.textContent.includes("Connection lost")) msg.remove();
+            });
         };
 
         socket.onerror = (error) => {
             console.error("WebSocket error:", error);
+            addErrorMessage("Connection lost. Trying to reconnect...");
         };
 
         socket.onmessage = (event) => {
