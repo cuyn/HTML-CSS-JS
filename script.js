@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let replyingTo = null;
 
-    const addMessage = (text, type = 'sent', replyText = null) => {
+    const addMessage = (text, type = 'sent') => {
         if (chatMessages) {
             removeTypingIndicator();
             const container = document.createElement('div');
@@ -287,61 +287,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${type}`;
-            
-            if (replyText) {
-                const replyDiv = document.createElement('div');
-                replyDiv.className = 'reply-context';
-                replyDiv.textContent = replyText;
-                msgDiv.appendChild(replyDiv);
-                
-                const textSpan = document.createElement('span');
-                textSpan.textContent = text;
-                msgDiv.appendChild(textSpan);
-            } else {
-                msgDiv.textContent = text;
-            }
+            msgDiv.textContent = text;
 
-            // Reply button container (positioned under message)
-            const replyBtnContainer = document.createElement('div');
-            replyBtnContainer.className = 'reply-btn-container';
-            
-            const replyBtn = document.createElement('button');
-            replyBtn.className = 'reply-btn';
-            replyBtn.innerHTML = '<i data-lucide="reply"></i>';
-            replyBtn.onclick = () => {
-                replyingTo = text;
-                const preview = document.getElementById('reply-preview');
-                const previewText = document.getElementById('reply-text');
-                const chatInputArea = document.querySelector('.chat-input-area');
-                if (preview && previewText) {
-                    previewText.textContent = text;
-                    preview.classList.add('active');
-                    if (chatInputArea) chatInputArea.classList.add('has-reply');
-                }
-                if (chatInput) chatInput.focus();
-                if (window.lucide) lucide.createIcons();
-            };
-
-            replyBtnContainer.appendChild(replyBtn);
             container.appendChild(msgDiv);
-            container.appendChild(replyBtnContainer);
             chatMessages.appendChild(container);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
             if (window.lucide) lucide.createIcons();
         }
     };
-
-    const cancelReplyBtn = document.getElementById('cancel-reply');
-    if (cancelReplyBtn) {
-        cancelReplyBtn.addEventListener('click', () => {
-            replyingTo = null;
-            const preview = document.getElementById('reply-preview');
-            const chatInputArea = document.querySelector('.chat-input-area');
-            if (preview) preview.classList.remove('active');
-            if (chatInputArea) chatInputArea.classList.remove('has-reply');
-        });
-    }
 
     const removeTypingIndicator = () => {
         const indicator = document.getElementById('typing-indicator');
@@ -391,14 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 socket.send(JSON.stringify(messageData));
-                addMessage(text, 'sent', replyingTo);
-                
-                // Clear reply state
-                replyingTo = null;
-                const preview = document.getElementById('reply-preview');
-                const chatInputArea = document.querySelector('.chat-input-area');
-                if (preview) preview.classList.remove('active');
-                if (chatInputArea) chatInputArea.classList.remove('has-reply');
+                addMessage(text, 'sent');
                 
                 chatInput.value = '';
             }
