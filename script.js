@@ -78,6 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2.5 Generate Random User Color
     const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+    
+    // Apply random color to Anonymous text if it exists
+    const anonymousTexts = document.querySelectorAll('h2');
+    anonymousTexts.forEach(el => {
+        if (el.textContent.includes('Anonymous')) {
+            el.style.color = userColor;
+        }
+    });
 
     // 3. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
@@ -175,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (partnerName) partnerName.innerText = `Anonymous`;
                 } else if (data.type === 'message') {
                     removeTypingIndicator();
-                    addMessage(data.text, 'received', data.color);
+                    addMessage(data.text, 'received');
                 } else if (data.type === 'typing') {
                     showTypingIndicator();
                 } else if (data.type === 'disconnected' || data.type === 'skipped') {
@@ -282,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let replyingTo = null;
 
-    const addMessage = (text, type = 'sent', color = null) => {
+    const addMessage = (text, type = 'sent') => {
         if (chatMessages) {
             removeTypingIndicator();
             const container = document.createElement('div');
@@ -291,10 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${type}`;
             msgDiv.textContent = text;
-            
-            if (color) {
-                msgDiv.style.backgroundColor = color;
-            }
 
             container.appendChild(msgDiv);
             chatMessages.appendChild(container);
@@ -346,10 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                const messageData = { type: 'message', text: text, color: userColor };
+                const messageData = { type: 'message', text: text };
                 
                 socket.send(JSON.stringify(messageData));
-                addMessage(text, 'sent', userColor);
+                addMessage(text, 'sent');
                 
                 chatInput.value = '';
             }
