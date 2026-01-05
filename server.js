@@ -15,6 +15,8 @@ let waitingUsers = [];
 
 wss.on('connection', (ws) => {
     ws.id = Math.random().toString(36).substr(2, 9);
+    // Generate a persistent color for this user session (lasts as long as socket is open)
+    ws.userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
     
     ws.on('message', (message) => {
         const data = JSON.parse(message);
@@ -26,8 +28,17 @@ wss.on('connection', (ws) => {
                     ws.partner = partner;
                     partner.partner = ws;
                     
-                    ws.send(JSON.stringify({ type: 'connected', partnerId: partner.id }));
-                    partner.send(JSON.stringify({ type: 'connected', partnerId: ws.id }));
+                    // Send partner's persistent color to each user
+                    ws.send(JSON.stringify({ 
+                        type: 'connected', 
+                        partnerId: partner.id,
+                        partnerColor: partner.userColor 
+                    }));
+                    partner.send(JSON.stringify({ 
+                        type: 'connected', 
+                        partnerId: ws.id,
+                        partnerColor: ws.userColor
+                    }));
                 } else {
                     waitingUsers.push(ws);
                     ws.send(JSON.stringify({ type: 'searching' }));

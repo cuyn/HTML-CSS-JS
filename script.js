@@ -177,7 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         chatInput.placeholder = "Type a message...";
                     }
                     if (sendButton) sendButton.disabled = false;
-                    if (partnerName) partnerName.innerText = `Anonymous`;
+                    
+                    // Update partner color based on data from server
+                    if (partnerName) {
+                        partnerName.innerText = `Anonymous`;
+                        if (data.partnerColor) {
+                            partnerName.style.color = data.partnerColor;
+                        }
+                    }
                 } else if (data.type === 'message') {
                     removeTypingIndicator();
                     addMessage(data.text, 'received');
