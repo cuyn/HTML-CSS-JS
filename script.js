@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (socket) return;
         
         // Use the current Replit domain dynamically or the fixed one
-        const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
+        const replitUrl = 'html-css-js--mtaaaaqlk1.replit.app';
         
         // Determine the correct host
         const isReplit = window.location.hostname.includes('replit.dev');
