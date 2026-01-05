@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const initWebSocket = () => {
         if (socket) return;
         
-        // IMPORTANT: Use the public URL provided by Replit for the backend
+        // Use the current Replit domain dynamically or the fixed one
         const replitUrl = 'db21fdab-266a-4e5d-bdc7-5aa3772a0c01-00-sjrjfhqyepy5.picard.replit.dev';
         
         // Determine the correct host
@@ -144,10 +144,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 existingMsgs.forEach(msg => {
                     if (msg.textContent.includes("Connection lost")) msg.remove();
                 });
+                // Send a ping to keep connection alive every 30s
+                socket.pingInterval = setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 30000);
             };
 
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
+                if (data.type === 'pong') return; // Ignore pong responses
                 if (data.type === 'searching') {
                     addStatusMessage("Searching for a partner...");
                 } else if (data.type === 'connected') {
@@ -190,10 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             socket.onclose = (event) => {
                 console.log("WebSocket closed. Code:", event.code, "Reason:", event.reason);
+                if (socket.pingInterval) clearInterval(socket.pingInterval);
                 socket = null;
                 if (!chatPage.classList.contains('hidden')) {
                     addErrorMessage("Connection lost. Trying to reconnect...");
-                    setTimeout(initWebSocket, 3000);
+                    setTimeout(initWebSocket, 2000); // Faster retry
                 }
             };
         } catch (err) {

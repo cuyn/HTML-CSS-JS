@@ -48,6 +48,8 @@ wss.on('connection', (ws) => {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
                 ws.partner.send(JSON.stringify({ type: 'typing' }));
             }
+        } else if (data.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
         } else if (data.type === 'next') {
             if (ws.partner) {
                 ws.partner.send(JSON.stringify({ type: 'skipped' }));
