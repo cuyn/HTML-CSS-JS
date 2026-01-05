@@ -101,106 +101,11 @@ nav {
     border-bottom-left-radius: 4px;
 }
 
-.reply-context {
-    background: rgba(0, 0, 0, 0.2);
-    border-left: 3px solid rgba(255, 255, 255, 0.5);
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    margin-bottom: 6px;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.reply-btn-container {
-    display: flex;
-    width: 100%;
-    margin-top: 4px;
-}
-
-.sent-container .reply-btn-container {
-    display: none;
-}
-
-.received-container .reply-btn-container {
-    display: flex;
-    justify-content: flex-start;
-}
-
-.reply-btn {
-    background: rgba(39, 39, 42, 0.4);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    color: rgba(255, 255, 255, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.reply-btn:active {
-    background: rgba(234, 88, 12, 0.3);
-    color: #ffffff;
-    transform: scale(0.9);
-}
-
-.reply-btn i {
-    width: 12px;
-    height: 12px;
-}
-
 /* Adjustments for mobile touch targets */
 @media (max-width: 640px) {
     .message {
         max-width: 85%;
     }
-    
-    .reply-btn {
-        padding: 6px 14px;
-        font-size: 11px;
-    }
-}
-
-.reply-preview-bar {
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    right: 0;
-    background: #18181b;
-    border-top: 1px solid #27272a;
-    padding: 12px 16px;
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 10;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.2s ease;
-}
-
-.reply-preview-bar.active {
-    display: flex;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.chat-input-area {
-    transition: padding-top 0.2s ease;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.message {
-    animation: fadeIn 0.3s ease-out;
 }
 
 /* Home Page Background Animation */
