@@ -79,13 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2.5 Generate Random User Color
     const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
     
-    // Apply random color to Anonymous text if it exists
-    const anonymousTexts = document.querySelectorAll('h2');
-    anonymousTexts.forEach(el => {
-        if (el.textContent.includes('Anonymous')) {
-            el.style.color = userColor;
-        }
-    });
+    // Apply random color ONLY to Anonymous text in chat header
+    if (partnerName) {
+        partnerName.style.color = userColor;
+    }
 
     // 3. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
