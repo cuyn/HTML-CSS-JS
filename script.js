@@ -128,8 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const replitUrl = 'html-css-js--mtaaaaqlk1.replit.app';
         
         // Determine the correct host
-        const isReplit = window.location.hostname.includes('replit.dev');
-        const host = isReplit ? window.location.host : replitUrl;
+        const host = replitUrl;
         
         console.log("Attempting WebSocket connection to:", host);
         // Netlify is HTTPS, Replit is HTTPS. Always use WSS for security and compatibility.
