@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const replyBtn = document.createElement('button');
             replyBtn.className = 'reply-btn';
-            replyBtn.innerHTML = '<i data-lucide="reply"></i> Reply';
+            replyBtn.innerHTML = '<i data-lucide="reply"></i>';
             replyBtn.onclick = () => {
                 replyingTo = text;
                 const preview = document.getElementById('reply-preview');
