@@ -14,28 +14,20 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         let data;
-        try {
-            data = JSON.parse(message);
-        } catch (e) { return; }
+        try { data = JSON.parse(message); } catch (e) { return; }
 
         if (data.type === 'find_partner') {
-            // إذا كان عنده شريك، نخبر الشريك أن هذا الشخص غادر (عن طريق Next)
+            // إذا ضغط المستخدم Next وكان عنده شريك، نخبر الشريك أنه تم السكيب عليه
             if (ws.partner) {
-                const prevPartner = ws.partner;
-                prevPartner.send(JSON.stringify({ type: 'disconnected' }));
-                prevPartner.partner = null;
+                ws.partner.send(JSON.stringify({ type: 'partner_skipped' }));
+                ws.partner.partner = null;
                 ws.partner = null;
-
-                // الشريك القديم يدخل قائمة الانتظار تلقائياً ليبحث له السيرفر عن شخص جديد
-                if (prevPartner.readyState === WebSocket.OPEN) {
-                    waitingUsers.push(prevPartner);
-                }
             }
 
-            // تنظيف القائمة والتأكد من عدم تكرار المستخدم
+            // تنظيف القائمة
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
-            // البحث عن شريك جديد
+            // البحث عن شريك
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
             if (otherUser) {
@@ -63,13 +55,11 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
         if (ws.partner) {
-            ws.partner.send(JSON.stringify({ type: 'disconnected' }));
+            ws.partner.send(JSON.stringify({ type: 'partner_skipped' }));
             ws.partner.partner = null;
         }
     });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running`);
-});
+server.listen(PORT, '0.0.0.0', () => console.log(`Server started`));
