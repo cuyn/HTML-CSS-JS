@@ -1,199 +1,90 @@
-// CONFIGURABLE ADS - The banner will rotate through these every 15s
-const AD_CONFIGS = [
-    {
-        name: "Advertise",
-        link: "https://www.instagram.com/chawaniiy?igsh=MWgwbDFuYjFraDdpbw%3D%3D&utm_source=qr",
-        text: "BO REKLAME DM US: @chawaniiy"
-    }
-];
-
-let currentAdIndex = 0;
-let countdownSeconds = 15;
-
-function updateBanners() {
-    const ad = AD_CONFIGS[currentAdIndex];
-    const bannerLink = document.getElementById('ad-banner-link');
-    const bannerText = document.getElementById('ad-banner-text');
-    const bannerLinkChat = document.getElementById('ad-banner-link-chat');
-    const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
-
-    if (bannerText) {
-        bannerText.classList.remove('ad-fade-in');
-        void bannerText.offsetWidth; 
-        bannerText.classList.add('ad-fade-in');
-        bannerText.textContent = ad.text;
-    }
-    if (bannerTextChat) {
-        bannerTextChat.classList.remove('ad-fade-in');
-        void bannerTextChat.offsetWidth;
-        bannerTextChat.classList.add('ad-fade-in');
-        bannerTextChat.textContent = ad.text;
-    }
-
-    if (bannerLink) bannerLink.href = ad.link;
-    if (bannerLinkChat) bannerLinkChat.href = ad.link;
-
-    currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
-    countdownSeconds = 15; 
-}
-
-function startCountdown() {
-    setInterval(() => {
-        countdownSeconds--;
-        if (countdownSeconds < 0) {
-            updateBanners();
-        }
-        const badges = [document.getElementById('countdown-badge'), document.querySelector('.countdown-badge-chat')];
-        badges.forEach(badge => { if (badge) badge.textContent = `${countdownSeconds}s`; });
-    }, 1000);
-}
+// ... (الأكواد العلوية الخاصة بالإعلانات والنجوم تبقى كما هي دون تغيير) ...
 
 document.addEventListener('DOMContentLoaded', () => {
-    const landingPage = document.getElementById('landing-page');
-    const chatPage = document.getElementById('chat-page');
-    const startNearby = document.getElementById('start-nearby');
-    const startRandom = document.getElementById('start-random');
-    const exitChat = document.getElementById('exit-chat');
-    const chatSubtitle = document.getElementById('chat-subtitle');
-    const partnerName = document.getElementById('partner-name');
-    const sendButton = document.getElementById('send-button');
-    const chatInput = document.getElementById('chat-input');
+    // العناصر الأساسية
     const chatMessages = document.getElementById('chat-messages');
-
-    if (window.lucide) lucide.createIcons();
-    updateBanners(); 
-    startCountdown();
-
-    const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
-    if (partnerName) partnerName.style.color = userColor;
-
-    const addStatusMessage = (text) => {
-        if (chatMessages) {
-            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-            existingMsgs.forEach(msg => msg.remove());
-            const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-amber-500/20 text-amber-500 text-xs font-medium px-4 py-2 rounded-2xl border border-amber-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-amber-500/10";
-            msgDiv.textContent = text;
-            chatMessages.appendChild(msgDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    };
-
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const nextChatBtn = document.getElementById('next-chat');
+    const partnerName = document.getElementById('partner-name');
     let socket = null;
 
-    const initWebSocket = () => {
-        if (socket) return;
-        const host = 'html-css-js--mtaaaaqlk1.replit.app';
-        try {
-            socket = new WebSocket(`wss://${host}`);
-            socket.onopen = () => {
-                socket.pingInterval = setInterval(() => {
-                    if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'ping' }));
-                }, 30000);
-            };
-
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === 'searching') {
-                    addStatusMessage("Searching for a partner...");
-                } else if (data.type === 'connected') {
-                    chatMessages.innerHTML = "";
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
-                    msgDiv.textContent = "Connected with a real person! Say hi!";
-                    chatMessages.appendChild(msgDiv);
-                    if (chatInput) { chatInput.disabled = false; chatInput.placeholder = "Type a message..."; }
-                    if (sendButton) sendButton.disabled = false;
-                    if (partnerName) { partnerName.innerText = `Anonymous`; if (data.partnerColor) partnerName.style.color = data.partnerColor; }
-                } else if (data.type === 'message') {
-                    // التعديل هنا: يمنع تكرار الرسالة الخاصة بك
-                    if (data.sender === 'partner') {
-                        removeTypingIndicator();
-                        addMessage(data.text, 'received');
-                    }
-                } else if (data.type === 'typing') {
-                    showTypingIndicator();
-                } else if (data.type === 'disconnected' || data.type === 'skipped') {
-                    addStatusMessage(data.type === 'disconnected' ? "Partner disconnected." : "User skipped you.");
-                    if (data.type === 'skipped') setTimeout(() => findPartner(), 1500);
-                }
-            };
-        } catch (err) { setTimeout(initWebSocket, 5000); }
-    };
-
-    const findPartner = () => {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-            initWebSocket();
-            const checkInt = setInterval(() => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    clearInterval(checkInt);
-                    socket.send(JSON.stringify({ type: 'find_partner' }));
-                }
-            }, 100);
-        } else {
-            socket.send(JSON.stringify({ type: 'find_partner' }));
-        }
-        chatMessages.innerHTML = "";
-        addStatusMessage("Searching for a partner...");
-    };
-
-    const openChat = () => {
-        if (landingPage) landingPage.classList.add('hidden');
-        if (chatPage) chatPage.classList.remove('hidden');
-        findPartner();
-    };
-
-    if (startRandom) startRandom.addEventListener('click', openChat);
-
-    const nextChatBtn = document.getElementById('next-chat');
-    if (nextChatBtn) {
-        nextChatBtn.addEventListener('click', () => {
-            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'next' }));
-        });
-    }
-
     const addMessage = (text, type = 'sent') => {
-        if (chatMessages) {
-            removeTypingIndicator();
-            const container = document.createElement('div');
-            container.className = `message-container ${type}-container`;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${type}`;
-            msgDiv.textContent = text;
-            container.appendChild(msgDiv);
-            chatMessages.appendChild(container);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    };
-
-    const removeTypingIndicator = () => { const indicator = document.getElementById('typing-indicator'); if (indicator) indicator.remove(); };
-    const showTypingIndicator = () => {
-        if (document.getElementById('typing-indicator')) return;
+        if (!chatMessages) return;
+        removeTypingIndicator();
+        const container = document.createElement('div');
+        container.className = `message-container ${type}-container`;
         const msgDiv = document.createElement('div');
-        msgDiv.id = 'typing-indicator';
-        msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
-        msgDiv.innerHTML = `<div class="flex gap-1"><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.2s]"></span><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.4s]"></span></div>`;
-        chatMessages.appendChild(msgDiv);
+        msgDiv.className = `message ${type}`;
+        msgDiv.textContent = text;
+        container.appendChild(msgDiv);
+        chatMessages.appendChild(container);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
-    if (chatInput) {
-        chatInput.addEventListener('input', () => {
-            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'typing' }));
-        });
-    }
+    const initWebSocket = () => {
+        if (socket) return;
+        socket = new WebSocket(`wss://html-css-js--mtaaaaqlk1.replit.app`);
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'searching') {
+                addStatusMessage("Searching for a partner...");
+                if (nextChatBtn) nextChatBtn.disabled = true; // تعطيل الزر أثناء البحث
+            } else if (data.type === 'connected') {
+                chatMessages.innerHTML = "";
+                addStatusMessage("Connected! Say hi!");
+                if (nextChatBtn) nextChatBtn.disabled = false; // تفعيل الزر فقط عند وجود شخص
+                if (chatInput) chatInput.disabled = false;
+                if (sendButton) sendButton.disabled = false;
+                if (partnerName) {
+                    partnerName.innerText = "Anonymous";
+                    if (data.partnerColor) partnerName.style.color = data.partnerColor;
+                }
+            } else if (data.type === 'message') {
+                if (data.sender === 'partner') {
+                    addMessage(data.text, 'received');
+                }
+            } else if (data.type === 'disconnected') {
+                addStatusMessage("Partner left.");
+                if (nextChatBtn) nextChatBtn.disabled = true; 
+                setTimeout(findPartner, 2000);
+            }
+        };
+    };
+
+    const findPartner = () => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        } else {
+            initWebSocket();
+        }
+        if (nextChatBtn) nextChatBtn.disabled = true; // قفل الزر حتى يجد شخصاً
+    };
 
     const sendMessage = () => {
-        if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
-            const text = chatInput.value.trim();
-            if (text) {
-                socket.send(JSON.stringify({ type: 'message', text: text }));
-                addMessage(text, 'sent');
-                chatInput.value = '';
-            }
+        const text = chatInput.value.trim();
+        if (text && socket && socket.readyState === WebSocket.OPEN) {
+            // منع الروابط
+            if (/(https?:\/\/[^\s]+)/g.test(text)) return alert("No links!");
+
+            socket.send(JSON.stringify({ type: 'message', text: text }));
+            addMessage(text, 'sent'); // عرض رسالتي فوراً
+            chatInput.value = '';
         }
     };
 
-    if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
-    if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+    // ربط الأزرار (تأكد أن IDs مطابقة لكود HTML عندك)
+    if (document.getElementById('start-random')) document.getElementById('start-random').addEventListener('click', () => {
+        document.getElementById('landing-page').classList.add('hidden');
+        document.getElementById('chat-page').classList.remove('hidden');
+        findPartner();
+    });
+
+    if (nextChatBtn) nextChatBtn.addEventListener('click', findPartner);
+    if (sendButton) sendButton.addEventListener('click', sendMessage);
+    if (chatInput) chatInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
+
+    // ... (باقي كود النجوم والخلفية والإعلانات يوضع هنا) ...
 });
