@@ -49,11 +49,13 @@ wss.on('connection', (ws) => {
             }
         } else if (data.type === 'message') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-                // CRITICAL: ONLY send to partner, NOT back to sender
-                ws.partner.send(JSON.stringify({ 
-                    type: 'message', 
-                    text: data.text 
-                }));
+                // Check if the partner is NOT the sender to prevent echo
+                if (ws.partner.id !== ws.id) {
+                    ws.partner.send(JSON.stringify({ 
+                        type: 'message', 
+                        text: data.text 
+                    }));
+                }
             }
         } else if (data.type === 'typing') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
