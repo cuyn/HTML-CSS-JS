@@ -1,90 +1,72 @@
-// ... (الأكواد العلوية الخاصة بالإعلانات والنجوم تبقى كما هي دون تغيير) ...
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const path = require('path');
 
-document.addEventListener('DOMContentLoaded', () => {
-    // العناصر الأساسية
-    const chatMessages = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input');
-    const sendButton = document.getElementById('send-button');
-    const nextChatBtn = document.getElementById('next-chat');
-    const partnerName = document.getElementById('partner-name');
-    let socket = null;
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-    const addMessage = (text, type = 'sent') => {
-        if (!chatMessages) return;
-        removeTypingIndicator();
-        const container = document.createElement('div');
-        container.className = `message-container ${type}-container`;
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        msgDiv.textContent = text;
-        container.appendChild(msgDiv);
-        chatMessages.appendChild(container);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    };
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use(express.static(__dirname));
 
-    const initWebSocket = () => {
-        if (socket) return;
-        socket = new WebSocket(`wss://html-css-js--mtaaaaqlk1.replit.app`);
+let waitingUsers = [];
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+wss.on('connection', (ws) => {
+    ws.id = Math.random().toString(36).substr(2, 9);
+    ws.userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
 
-            if (data.type === 'searching') {
-                addStatusMessage("Searching for a partner...");
-                if (nextChatBtn) nextChatBtn.disabled = true; // تعطيل الزر أثناء البحث
-            } else if (data.type === 'connected') {
-                chatMessages.innerHTML = "";
-                addStatusMessage("Connected! Say hi!");
-                if (nextChatBtn) nextChatBtn.disabled = false; // تفعيل الزر فقط عند وجود شخص
-                if (chatInput) chatInput.disabled = false;
-                if (sendButton) sendButton.disabled = false;
-                if (partnerName) {
-                    partnerName.innerText = "Anonymous";
-                    if (data.partnerColor) partnerName.style.color = data.partnerColor;
-                }
-            } else if (data.type === 'message') {
-                if (data.sender === 'partner') {
-                    addMessage(data.text, 'received');
-                }
-            } else if (data.type === 'disconnected') {
-                addStatusMessage("Partner left.");
-                if (nextChatBtn) nextChatBtn.disabled = true; 
-                setTimeout(findPartner, 2000);
+    ws.on('message', (message) => {
+        const data = JSON.parse(message);
+
+        if (data.type === 'find_partner' || data.type === 'next') {
+            // تنظيف أي اتصال قديم
+            if (ws.partner) {
+                ws.partner.send(JSON.stringify({ type: 'disconnected' }));
+                ws.partner.partner = null;
+                ws.partner = null;
             }
-        };
-    };
+            // إزالة المستخدم من الانتظار لمنع التكرار
+            waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
 
-    const findPartner = () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'find_partner' }));
-        } else {
-            initWebSocket();
+            // البحث عن شخص "حقيقي" آخر ليس أنت
+            const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
+
+            if (otherUser) {
+                waitingUsers = waitingUsers.filter(u => u.id !== otherUser.id);
+                ws.partner = otherUser;
+                otherUser.partner = ws;
+
+                ws.send(JSON.stringify({ type: 'connected', partnerId: otherUser.id, partnerColor: otherUser.userColor }));
+                otherUser.send(JSON.stringify({ type: 'connected', partnerId: ws.id, partnerColor: ws.userColor }));
+            } else {
+                waitingUsers.push(ws);
+                ws.send(JSON.stringify({ type: 'searching' }));
+            }
+        } else if (data.type === 'message') {
+            if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
+                // نرسل للشريك فقط
+                ws.partner.send(JSON.stringify({ type: 'message', text: data.text, sender: 'partner' }));
+            }
+        } else if (data.type === 'typing') {
+            if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
+                ws.partner.send(JSON.stringify({ type: 'typing' }));
+            }
+        } else if (data.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
         }
-        if (nextChatBtn) nextChatBtn.disabled = true; // قفل الزر حتى يجد شخصاً
-    };
-
-    const sendMessage = () => {
-        const text = chatInput.value.trim();
-        if (text && socket && socket.readyState === WebSocket.OPEN) {
-            // منع الروابط
-            if (/(https?:\/\/[^\s]+)/g.test(text)) return alert("No links!");
-
-            socket.send(JSON.stringify({ type: 'message', text: text }));
-            addMessage(text, 'sent'); // عرض رسالتي فوراً
-            chatInput.value = '';
-        }
-    };
-
-    // ربط الأزرار (تأكد أن IDs مطابقة لكود HTML عندك)
-    if (document.getElementById('start-random')) document.getElementById('start-random').addEventListener('click', () => {
-        document.getElementById('landing-page').classList.add('hidden');
-        document.getElementById('chat-page').classList.remove('hidden');
-        findPartner();
     });
 
-    if (nextChatBtn) nextChatBtn.addEventListener('click', findPartner);
-    if (sendButton) sendButton.addEventListener('click', sendMessage);
-    if (chatInput) chatInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
+    ws.on('close', () => {
+        waitingUsers = waitingUsers.filter(user => user !== ws);
+        if (ws.partner) {
+            ws.partner.send(JSON.stringify({ type: 'disconnected' }));
+            ws.partner.partner = null;
+        }
+    });
+});
 
-    // ... (باقي كود النجوم والخلفية والإعلانات يوضع هنا) ...
+const PORT = 5000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
