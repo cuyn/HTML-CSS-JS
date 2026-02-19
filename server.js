@@ -19,17 +19,23 @@ wss.on('connection', (ws) => {
         } catch (e) { return; }
 
         if (data.type === 'find_partner') {
-            // فصل الشريك الحالي إن وجد
+            // إذا كان عنده شريك، نخبر الشريك أن هذا الشخص غادر (عن طريق Next)
             if (ws.partner) {
-                ws.partner.send(JSON.stringify({ type: 'disconnected' }));
-                ws.partner.partner = null;
+                const prevPartner = ws.partner;
+                prevPartner.send(JSON.stringify({ type: 'disconnected' }));
+                prevPartner.partner = null;
                 ws.partner = null;
+
+                // الشريك القديم يدخل قائمة الانتظار تلقائياً ليبحث له السيرفر عن شخص جديد
+                if (prevPartner.readyState === WebSocket.OPEN) {
+                    waitingUsers.push(prevPartner);
+                }
             }
 
-            // تنظيف القائمة من المستخدم الحالي
+            // تنظيف القائمة والتأكد من عدم تكرار المستخدم
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
-            // البحث عن شريك متاح
+            // البحث عن شريك جديد
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
             if (otherUser) {
@@ -65,5 +71,5 @@ wss.on('connection', (ws) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running`);
 });
