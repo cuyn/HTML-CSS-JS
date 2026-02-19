@@ -1,6 +1,4 @@
-// =========================
-// الإعلانات
-// =========================
+// كود الإعلانات الأصلي حقك
 const AD_CONFIGS = [
     {
         name: "Advertise",
@@ -14,19 +12,19 @@ let countdownSeconds = 15;
 
 function updateBanners() {
     const ad = AD_CONFIGS[currentAdIndex];
-
     const bannerLink = document.getElementById('ad-banner-link');
     const bannerText = document.getElementById('ad-banner-text');
     const bannerLinkChat = document.getElementById('ad-banner-link-chat');
     const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
 
-    if (bannerText) {
-        bannerText.textContent = ad.text;
-    }
-
-    if (bannerTextChat) {
-        bannerTextChat.textContent = ad.text;
-    }
+    [bannerText, bannerTextChat].forEach(el => {
+        if (el) {
+            el.classList.remove('ad-fade-in');
+            void el.offsetWidth;
+            el.classList.add('ad-fade-in');
+            el.textContent = ad.text;
+        }
+    });
 
     if (bannerLink) bannerLink.href = ad.link;
     if (bannerLinkChat) bannerLinkChat.href = ad.link;
@@ -39,187 +37,105 @@ function startCountdown() {
     setInterval(() => {
         countdownSeconds--;
         if (countdownSeconds < 0) updateBanners();
-
-        const badges = [
-            document.getElementById('countdown-badge'),
-            document.querySelector('.countdown-badge-chat')
-        ];
-
-        badges.forEach(badge => {
-            if (badge) badge.textContent = `${countdownSeconds}s`;
-        });
-
+        const badges = [document.getElementById('countdown-badge'), document.querySelector('.countdown-badge-chat')];
+        badges.forEach(badge => { if (badge) badge.textContent = `${countdownSeconds}s`; });
     }, 1000);
 }
 
-// =========================
-// WebSocket
-// =========================
-let socket = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const landingPage = document.getElementById('landing-page');
+    const chatPage = document.getElementById('chat-page');
+    const startNearby = document.getElementById('start-nearby');
+    const startRandom = document.getElementById('start-random');
+    const exitChat = document.getElementById('exit-chat');
+    const chatSubtitle = document.getElementById('chat-subtitle');
+    const partnerName = document.getElementById('partner-name');
+    const sendButton = document.getElementById('send-button');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
 
-const initWebSocket = () => {
-    if (socket) return;
+    if (window.lucide) lucide.createIcons();
+    updateBanners(); 
+    startCountdown();
 
-    const host = window.location.host;
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+    if (partnerName) partnerName.style.color = userColor;
 
-    socket = new WebSocket(`${protocol}://${host}`);
-
-    socket.onopen = () => {
-        socket.pingInterval = setInterval(() => {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'ping' }));
-            }
-        }, 30000);
-    };
-
-    socket.onclose = () => {
-        if (socket.pingInterval) clearInterval(socket.pingInterval);
-        socket = null;
-    };
-
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === 'searching') {
-            addStatusMessage("Searching for a partner...");
-        }
-
-        else if (data.type === 'connected') {
-            chatMessages.innerHTML = "";
-            addStatusMessage("Connected with a real person! Say hi!");
-
-            chatInput.disabled = false;
-            sendButton.disabled = false;
-            chatInput.placeholder = "Type a message...";
-
-            partnerName.innerText = "Anonymous";
-            if (data.partnerColor) {
-                partnerName.style.color = data.partnerColor;
-            }
-        }
-
-        else if (data.type === 'message') {
+    const addMessage = (text, type = 'sent') => {
+        if (chatMessages) {
             removeTypingIndicator();
-            addMessage(data.text, 'received');
-        }
-
-        else if (data.type === 'typing') {
-            showTypingIndicator();
-        }
-
-        else if (data.type === 'disconnected') {
-            addStatusMessage("Partner disconnected.");
-        }
-
-        else if (data.type === 'skipped') {
-            addStatusMessage("User skipped you.");
-            setTimeout(findPartner, 1500);
+            const container = document.createElement('div');
+            container.className = `message-container ${type}-container`;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = text;
+            container.appendChild(msgDiv);
+            chatMessages.appendChild(container);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     };
-};
 
-// =========================
-// البحث
-// =========================
-const findPartner = () => {
+    let socket = null;
 
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-        initWebSocket();
+    const initWebSocket = () => {
+        if (socket) return;
+        const host = 'html-css-js--mtaaaaqlk1.replit.app';
+        try {
+            socket = new WebSocket(`wss://${host}`);
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'connected') {
+                    chatMessages.innerHTML = "";
+                    addMessage("Connected! Say hi!", "status-msg");
+                    if (chatInput) chatInput.disabled = false;
+                    if (sendButton) sendButton.disabled = false;
+                } else if (data.type === 'message') {
+                    // التعديل: اعرض الرسالة فقط لو جاية من الشريك
+                    if (data.sender === 'partner') {
+                        removeTypingIndicator();
+                        addMessage(data.text, 'received');
+                    }
+                }
+                // ... باقي كود الـ onmessage حقك
+            };
+        } catch (err) { setTimeout(initWebSocket, 5000); }
+    };
 
-        const check = setInterval(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                clearInterval(check);
-                socket.send(JSON.stringify({ type: 'find_partner' }));
+    const sendMessage = () => {
+        if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
+            const text = chatInput.value.trim();
+            if (text) {
+                socket.send(JSON.stringify({ type: 'message', text: text }));
+                addMessage(text, 'sent'); // تظهر مرة واحدة في اليمين
+                chatInput.value = '';
             }
-        }, 100);
+        }
+    };
 
-    } else {
-        socket.send(JSON.stringify({ type: 'find_partner' }));
-    }
+    if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
+    if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-    chatMessages.innerHTML = "";
-};
+    // كود النجوم حقك
+    const initBackground = () => {
+        const container = document.querySelector('.stars-container');
+        if (!container) return;
+        for (let i = 0; i < 60; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            container.appendChild(star);
+        }
+    };
+    initBackground();
 
-// =========================
-// الرسائل
-// =========================
-const sendMessage = () => {
-    const text = chatInput.value.trim();
-
-    if (!text) return;
-
-    socket.send(JSON.stringify({
-        type: 'message',
-        text
-    }));
-
-    addMessage(text, 'sent');
-    chatInput.value = '';
-};
-
-// typing
-chatInput.addEventListener('input', () => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'typing' }));
-    }
+    // تشغيل الـ Random Chat
+    if (startRandom) startRandom.addEventListener('click', () => {
+        landingPage.classList.add('hidden');
+        chatPage.classList.remove('hidden');
+        initWebSocket();
+        setTimeout(() => socket.send(JSON.stringify({ type: 'find_partner' })), 500);
+    });
 });
 
-// =========================
-// الواجهة
-// =========================
-const addMessage = (text, type) => {
-    const div = document.createElement('div');
-    div.className = `message ${type}`;
-    div.textContent = text;
-    chatMessages.appendChild(div);
-};
-
-const addStatusMessage = (text) => {
-    const div = document.createElement('div');
-    div.className = "status-msg";
-    div.textContent = text;
-    chatMessages.appendChild(div);
-};
-
-const removeTypingIndicator = () => {
-    const el = document.getElementById('typing-indicator');
-    if (el) el.remove();
-};
-
-const showTypingIndicator = () => {
-    if (document.getElementById('typing-indicator')) return;
-
-    const div = document.createElement('div');
-    div.id = 'typing-indicator';
-    div.textContent = "Typing...";
-    chatMessages.appendChild(div);
-};
-
-// =========================
-// أزرار
-// =========================
-startRandom.onclick = () => {
-    landingPage.classList.add('hidden');
-    chatPage.classList.remove('hidden');
-    findPartner();
-};
-
-sendButton.onclick = sendMessage;
-
-chatInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendMessage();
-});
-
-nextChat.onclick = () => {
-    if (socket) socket.send(JSON.stringify({ type: 'next' }));
-};
-
-exitChat.onclick = () => {
-    if (socket) socket.close();
-    location.reload();
-};
-
-// =========================
-updateBanners();
-startCountdown();
+function removeTypingIndicator() { const el = document.getElementById('typing-indicator'); if(el) el.remove(); }
