@@ -1,68 +1,394 @@
-// --- داخل دالة initWebSocket ---
-socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'pong') return;
+// CONFIGURABLE ADS - The banner will rotate through these every 15s
+const AD_CONFIGS = [
+    {
+        name: "Advertise",
+        link: "https://www.instagram.com/chawaniiy?igsh=MWgwbDFuYjFraDdpbw%3D%3D&utm_source=qr",
+        text: "BO REKLAME DM US: @chawaniiy"
+    }
+];
 
-    if (data.type === 'searching') {
-        addStatusMessage("Searching for a partner...");
-    } 
-    else if (data.type === 'connected') {
+let currentAdIndex = 0;
+let countdownSeconds = 15;
+
+function updateBanners() {
+    const ad = AD_CONFIGS[currentAdIndex];
+    const bannerLink = document.getElementById('ad-banner-link');
+    const bannerText = document.getElementById('ad-banner-text');
+    const bannerLinkChat = document.getElementById('ad-banner-link-chat');
+    const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
+
+    [bannerText, bannerTextChat].forEach(el => {
+        if (el) {
+            el.classList.remove('ad-fade-in');
+            void el.offsetWidth; 
+            el.classList.add('ad-fade-in');
+            el.textContent = ad.text;
+        }
+    });
+
+    if (bannerLink) bannerLink.href = ad.link;
+    if (bannerLinkChat) bannerLinkChat.href = ad.link;
+
+    currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
+    countdownSeconds = 15; 
+}
+
+function startCountdown() {
+    setInterval(() => {
+        countdownSeconds--;
+        if (countdownSeconds < 0) {
+            updateBanners();
+        }
+
+        const badges = [
+            document.getElementById('countdown-badge'),
+            document.querySelector('.countdown-badge-chat')
+        ];
+
+        badges.forEach(badge => {
+            if (badge) badge.textContent = `${countdownSeconds}s`;
+        });
+    }, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const landingPage = document.getElementById('landing-page');
+    const chatPage = document.getElementById('chat-page');
+    const startNearby = document.getElementById('start-nearby');
+    const startRandom = document.getElementById('start-random');
+    const exitChat = document.getElementById('exit-chat');
+    const chatSubtitle = document.getElementById('chat-subtitle');
+    const partnerName = document.getElementById('partner-name');
+    const sendButton = document.getElementById('send-button');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
+    updateBanners(); 
+    startCountdown();
+
+    const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+
+    if (partnerName) {
+        partnerName.style.color = userColor;
+    }
+
+    const genderButtons = document.querySelectorAll('.gender-btn');
+    let selectedGender = null;
+
+    genderButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            genderButtons.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedGender = btn.dataset.gender;
+        });
+    });
+
+    const addStatusMessage = (text) => {
+        if (chatMessages) {
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => msg.remove());
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-center bg-amber-500/20 text-amber-500 text-xs font-medium px-4 py-2 rounded-2xl border border-amber-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-amber-500/10";
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msgDiv;
+        }
+    };
+
+    const addErrorMessage = (text) => {
+        if (chatMessages) {
+            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+            existingMsgs.forEach(msg => msg.remove());
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msgDiv;
+        }
+    };
+
+    let socket = null;
+
+    const initWebSocket = () => {
+        if (socket) return;
+
+        const host = 'html-css-js--mtaaaaqlk1.replit.app';
+        const wsProtocol = 'wss';
+
+        try {
+            socket = new WebSocket(`${wsProtocol}://${host}`);
+
+            socket.onopen = () => {
+                const existingMsgs = chatMessages.querySelectorAll('.status-msg');
+                existingMsgs.forEach(msg => {
+                    if (msg.textContent.includes("Connection lost")) msg.remove();
+                });
+                socket.pingInterval = setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 30000);
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'pong') return;
+                if (data.type === 'searching') {
+                    addStatusMessage("Searching for a partner...");
+                } else if (data.type === 'connected') {
+                    chatMessages.innerHTML = "";
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
+                    msgDiv.textContent = "Connected with a real person! Say hi!";
+                    chatMessages.appendChild(msgDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    if (chatInput) {
+                        chatInput.disabled = false;
+                        chatInput.placeholder = "Type a message...";
+                    }
+                    if (sendButton) sendButton.disabled = false;
+
+                    const nextChatBtn = document.getElementById('next-chat');
+                    if (nextChatBtn) {
+                        nextChatBtn.disabled = false;
+                        nextChatBtn.style.opacity = "1";
+                        nextChatBtn.style.pointerEvents = "auto";
+                    }
+
+                    if (partnerName) {
+                        partnerName.innerText = `Anonymous`;
+                        if (data.partnerColor) {
+                            partnerName.style.color = data.partnerColor;
+                        }
+                    }
+                } else if (data.type === 'message') {
+                    // تصحيح الخطأ: لا تظهر الرسالة إلا إذا كانت من الشريك فعلاً
+                    if (data.sender === 'partner') {
+                        removeTypingIndicator();
+                        addMessage(data.text, 'received');
+                    }
+                } else if (data.type === 'typing') {
+                    showTypingIndicator();
+                } else if (data.type === 'disconnected' || data.type === 'skipped') {
+                    if (chatInput) {
+                        chatInput.disabled = true;
+                        chatInput.placeholder = "Partner left. Searching...";
+                    }
+                    if (sendButton) sendButton.disabled = true;
+                    if (data.type === 'disconnected') {
+                        addStatusMessage("Partner disconnected.");
+                    } else {
+                        addStatusMessage("User skipped you. Finding someone else...");
+                        setTimeout(() => findPartner(), 1500);
+                    }
+                }
+            };
+
+            socket.onclose = (event) => {
+                if (socket.pingInterval) clearInterval(socket.pingInterval);
+                socket = null;
+                if (!chatPage.classList.contains('hidden')) {
+                    addErrorMessage("Connection lost. Trying to reconnect...");
+                    setTimeout(initWebSocket, 2000);
+                }
+            };
+        } catch (err) {
+            setTimeout(initWebSocket, 5000);
+        }
+    };
+
+    const findPartner = () => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            initWebSocket();
+            const checkInt = setInterval(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    clearInterval(checkInt);
+                    socket.send(JSON.stringify({ type: 'find_partner' }));
+                }
+            }, 100);
+        } else {
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        }
+
         chatMessages.innerHTML = "";
-        addStatusMessage("Connected with a real person! Say hi!");
-
-        if (chatInput) { chatInput.disabled = false; chatInput.placeholder = "Type a message..."; }
-        if (sendButton) sendButton.disabled = false;
+        addStatusMessage("Searching for a partner...");
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = "Searching for partner...";
+        }
+        if (sendButton) sendButton.disabled = true;
 
         const nextChatBtn = document.getElementById('next-chat');
         if (nextChatBtn) {
-            nextChatBtn.disabled = false;
-            nextChatBtn.style.opacity = "1";
-            nextChatBtn.style.pointerEvents = "auto";
+            nextChatBtn.disabled = true;
+            nextChatBtn.style.opacity = "0.5";
+            nextChatBtn.style.pointerEvents = "none";
         }
+    };
 
-        if (partnerName && data.partnerColor) {
-            partnerName.innerText = `Anonymous`;
-            partnerName.style.color = data.partnerColor;
-        }
-    } 
-    else if (data.type === 'message') {
-        // أهم تعديل: لا تعرض الرسالة القادمة من السيرفر إلا إذا كانت من الشريك
-        if (data.sender === 'partner') {
-            removeTypingIndicator();
-            addMessage(data.text, 'received');
-        }
-    } 
-    else if (data.type === 'typing') {
-        showTypingIndicator();
-    } 
-    else if (data.type === 'disconnected' || data.type === 'skipped') {
-        if (chatInput) { chatInput.disabled = true; chatInput.placeholder = "Partner left. Searching..."; }
-        if (sendButton) sendButton.disabled = true;
-        addStatusMessage(data.type === 'disconnected' ? "Partner disconnected." : "User skipped you.");
-        if (data.type === 'skipped') setTimeout(() => findPartner(), 1500);
-    }
-};
-
-// --- دالة إرسال الرسالة المصلحة ---
-const sendMessage = () => {
-    if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
-        const text = chatInput.value.trim();
-        if (text) {
-            // كود منع الروابط الخاص بك
-            const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
-            if (urlPattern.test(text)) {
-                addErrorMessage("Links are not allowed.");
-                chatInput.value = '';
+    const openChat = (isNearby = false) => {
+        if (isNearby) {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
                 return;
             }
-
-            // 1. إرسال البيانات للسيرفر (سيستلمها الشريك فقط)
-            socket.send(JSON.stringify({ type: 'message', text: text }));
-
-            // 2. عرض الرسالة في شاشتك فوراً كمرسل (sent)
-            addMessage(text, 'sent');
-
-            chatInput.value = '';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const randomDistance = (Math.random() * 19 + 0.5).toFixed(1);
+                    if (landingPage) landingPage.classList.add('hidden');
+                    if (chatPage) chatPage.classList.remove('hidden');
+                    if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
+                    findPartner();
+                },
+                (error) => {
+                    alert("Unable to retrieve your location. Using random match instead.");
+                    if (landingPage) landingPage.classList.add('hidden');
+                    if (chatPage) chatPage.classList.remove('hidden');
+                    findPartner();
+                }
+            );
+        } else {
+            if (landingPage) landingPage.classList.add('hidden');
+            if (chatPage) chatPage.classList.remove('hidden');
+            findPartner();
         }
+    };
+
+    if (startNearby) startNearby.addEventListener('click', () => openChat(true));
+    if (startRandom) startRandom.addEventListener('click', () => openChat(false));
+    if (exitChat) {
+        exitChat.addEventListener('click', () => {
+            if (chatPage) chatPage.classList.add('hidden');
+            if (landingPage) landingPage.classList.remove('hidden');
+        });
     }
-};
+
+    const nextChatBtn = document.getElementById('next-chat');
+    if (nextChatBtn) {
+        nextChatBtn.addEventListener('click', () => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'next' }));
+            }
+        });
+    }
+
+    const addMessage = (text, type = 'sent') => {
+        if (chatMessages) {
+            removeTypingIndicator();
+            const container = document.createElement('div');
+            container.className = `message-container ${type}-container`;
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = text;
+
+            container.appendChild(msgDiv);
+            chatMessages.appendChild(container);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    const removeTypingIndicator = () => {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    };
+
+    const showTypingIndicator = () => {
+        if (document.getElementById('typing-indicator')) return;
+        if (chatMessages) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'typing-indicator';
+            msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
+            msgDiv.innerHTML = `
+                <div class="flex gap-1">
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s]"></span>
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></span>
+                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></span>
+                </div>
+            `;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    };
+
+    if (chatInput) {
+        chatInput.addEventListener('input', () => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'typing' }));
+            }
+        });
+    }
+
+    // تصحيح دالة الإرسال لتعرض الرسالة مرة واحدة وتنفذ فحص الروابط
+    const sendMessage = () => {
+        if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
+            const text = chatInput.value.trim();
+            if (text) {
+                const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
+                if (urlPattern.test(text)) {
+                    addErrorMessage("Links are not allowed.");
+                    chatInput.value = '';
+                    return;
+                }
+
+                socket.send(JSON.stringify({ type: 'message', text: text }));
+                addMessage(text, 'sent'); // تظهر مرة واحدة في اليمين
+
+                chatInput.value = '';
+            }
+        }
+    };
+
+    if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
+    if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+
+    setInterval(() => {
+        const count = document.getElementById('online-count');
+        if (count) {
+            const current = parseInt(count.innerText) || 280;
+            const change = Math.floor(Math.random() * 5) - 2;
+            count.innerText = Math.max(100, current + change);
+        }
+    }, 5000);
+
+    const initBackground = () => {
+        const container = document.querySelector('.stars-container');
+        if (!container) return;
+        for (let i = 0; i < 60; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 1.5 + 0.5;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.setProperty('--duration', `${Math.random() * 4 + 3}s`);
+            container.appendChild(star);
+        }
+        const createMeteor = () => {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.style.left = `${Math.random() * 100 + 40}%`;
+            meteor.style.top = `${Math.random() * 30}%`;
+            meteor.style.setProperty('--duration', `${Math.random() * 1.5 + 1}s`);
+            container.appendChild(meteor);
+            setTimeout(() => meteor.remove(), 3000);
+        };
+        const scheduleMeteor = () => {
+            setTimeout(() => { createMeteor(); scheduleMeteor(); }, Math.random() * 8000 + 4000);
+        };
+        scheduleMeteor();
+    };
+    initBackground();
+});
