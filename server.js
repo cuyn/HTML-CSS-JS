@@ -49,11 +49,14 @@ wss.on('connection', (ws) => {
             }
         } else if (data.type === 'message') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-                ws.partner.send(JSON.stringify({ 
-                    type: 'message', 
-                    text: data.text,
-                    replyTo: data.replyTo 
-                }));
+                // Check if the partner is NOT the sender to prevent echo
+                if (ws.partner !== ws) {
+                    ws.partner.send(JSON.stringify({ 
+                        type: 'message', 
+                        text: data.text,
+                        replyTo: data.replyTo 
+                    }));
+                }
             }
         } else if (data.type === 'typing') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
