@@ -1,29 +1,49 @@
-// 1. تحديث جزء استقبال الرسائل
+// --- داخل دالة initWebSocket ---
 socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.type === 'pong') return;
 
     if (data.type === 'searching') {
         addStatusMessage("Searching for a partner...");
-    } else if (data.type === 'connected') {
-        // ... كود الاتصال يبقى كما هو ...
+    } 
+    else if (data.type === 'connected') {
         chatMessages.innerHTML = "";
         addStatusMessage("Connected with a real person! Say hi!");
-        // (باقي الكود الخاص بتفعيل الأزرار)
-    } else if (data.type === 'message') {
-        removeTypingIndicator();
 
-        // الحل هنا: لا نعرض الرسالة إلا إذا كانت قادمة من الشريك
+        if (chatInput) { chatInput.disabled = false; chatInput.placeholder = "Type a message..."; }
+        if (sendButton) sendButton.disabled = false;
+
+        const nextChatBtn = document.getElementById('next-chat');
+        if (nextChatBtn) {
+            nextChatBtn.disabled = false;
+            nextChatBtn.style.opacity = "1";
+            nextChatBtn.style.pointerEvents = "auto";
+        }
+
+        if (partnerName && data.partnerColor) {
+            partnerName.innerText = `Anonymous`;
+            partnerName.style.color = data.partnerColor;
+        }
+    } 
+    else if (data.type === 'message') {
+        // أهم تعديل: لا تعرض الرسالة القادمة من السيرفر إلا إذا كانت من الشريك
         if (data.sender === 'partner') {
+            removeTypingIndicator();
             addMessage(data.text, 'received');
         }
-    } else if (data.type === 'typing') {
+    } 
+    else if (data.type === 'typing') {
         showTypingIndicator();
+    } 
+    else if (data.type === 'disconnected' || data.type === 'skipped') {
+        if (chatInput) { chatInput.disabled = true; chatInput.placeholder = "Partner left. Searching..."; }
+        if (sendButton) sendButton.disabled = true;
+        addStatusMessage(data.type === 'disconnected' ? "Partner disconnected." : "User skipped you.");
+        if (data.type === 'skipped') setTimeout(() => findPartner(), 1500);
     }
-    // ... باقي الحالات (disconnected, skipped) تبقى كما هي
 };
 
-// 2. تحديث جزء إرسال الرسائل
+// --- دالة إرسال الرسالة المصلحة ---
 const sendMessage = () => {
     if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
         const text = chatInput.value.trim();
@@ -36,10 +56,10 @@ const sendMessage = () => {
                 return;
             }
 
-            // نرسل الرسالة للسيرفر
+            // 1. إرسال البيانات للسيرفر (سيستلمها الشريك فقط)
             socket.send(JSON.stringify({ type: 'message', text: text }));
 
-            // نعرضها في شاشتنا نحن فقط كـ "sent" (جهة اليمين)
+            // 2. عرض الرسالة في شاشتك فوراً كمرسل (sent)
             addMessage(text, 'sent');
 
             chatInput.value = '';
