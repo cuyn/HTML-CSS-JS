@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let socket = null;
     let typingTimeout = null;
 
-    // زر الرجوع
+    // تفعيل سهم الرجوع
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             if (socket) { socket.close(); socket = null; }
@@ -23,19 +23,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // حالة البحث (أصفر + تعطيل)
+    // حالة البحث (أصفر + تعطيل الأزرار)
     const showSearchingStatus = () => {
         chatMessages.innerHTML = "";
         const msgDiv = document.createElement('div');
         msgDiv.className = "self-center bg-amber-500/10 text-amber-500 text-[11px] font-medium px-4 py-2 rounded-full border border-amber-500/20 my-4 animate-pulse";
-        msgDiv.textContent = "Searching...";
+        msgDiv.textContent = "Searching for a partner...";
         chatMessages.appendChild(msgDiv);
 
         chatInput.disabled = true;
         chatInput.placeholder = "Searching...";
         nextChatBtn.disabled = true;
         nextChatBtn.style.opacity = "0.5";
-        sendButton.disabled = true;
     };
 
     // حالة الاتصال (أخضر + تفعيل)
@@ -54,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.focus();
     };
 
-    // أنيميشن Typing برتقالي
+    // أنيميشن Typing برتقالي مع نقاط متحركة
     const showTypingIndicator = () => {
         if (document.getElementById('typing-indicator')) return;
         const typingDiv = document.createElement('div');
@@ -63,9 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
         typingDiv.innerHTML = `
             <span class="text-[10px] text-orange-500 font-bold uppercase tracking-tight">typing</span>
             <div class="flex gap-0.5">
-                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay: 0s"></span>
-                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0s"></span>
+                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0.2s"></span>
+                <span class="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0.4s"></span>
             </div>`;
         chatMessages.appendChild(typingDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -76,10 +75,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
+    // تهيئة الاتصال بالسيرفر
     const initWebSocket = () => {
-        if (socket) return;
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        socket = new WebSocket(`${protocol}//${window.location.host}`);
+        if (socket && socket.readyState === WebSocket.OPEN) return;
+
+        // رابط السيرفر الخاص بك (Replit)
+        const REPLIT_URL = "wss://html-css-js--mtaaaaqlk1.replit.app"; 
+        socket = new WebSocket(REPLIT_URL);
+
+        socket.onopen = () => {
+            console.log("Connected to Replit Server!");
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -96,24 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 typingTimeout = setTimeout(removeTypingIndicator, 3000);
             } else if (data.type === 'disconnected') {
                 showSearchingStatus();
-                setTimeout(() => socket.send(JSON.stringify({ type: 'find_partner' })), 1000);
+                setTimeout(() => {
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 'find_partner' }));
+                    }
+                }, 1000);
             }
+        };
+
+        socket.onclose = () => {
+            console.log("Connection lost. Reconnecting...");
+            socket = null;
         };
     };
 
     const findPartner = () => {
+        showSearchingStatus();
         if (!socket || socket.readyState !== WebSocket.OPEN) {
             initWebSocket();
-            const check = setInterval(() => {
-                if(socket.readyState === WebSocket.OPEN) {
-                    clearInterval(check);
-                    socket.send(JSON.stringify({ type: 'find_partner' }));
-                }
-            }, 100);
         } else {
             socket.send(JSON.stringify({ type: 'find_partner' }));
         }
-        showSearchingStatus();
     };
 
     const sendMessage = () => {
