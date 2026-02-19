@@ -178,6 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     if (sendButton) sendButton.disabled = false;
                     
+                    // Enable Next button only when connected
+                    const nextChatBtn = document.getElementById('next-chat');
+                    if (nextChatBtn) {
+                        nextChatBtn.disabled = false;
+                        nextChatBtn.style.opacity = "1";
+                        nextChatBtn.style.pointerEvents = "auto";
+                    }
+                    
                     // Update partner color based on data from server
                     if (partnerName) {
                         partnerName.innerText = `Anonymous`;
@@ -244,6 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
             chatInput.placeholder = "Searching for partner...";
         }
         if (sendButton) sendButton.disabled = true;
+
+        // Disable Next button while searching
+        const nextChatBtn = document.getElementById('next-chat');
+        if (nextChatBtn) {
+            nextChatBtn.disabled = true;
+            nextChatBtn.style.opacity = "0.5";
+            nextChatBtn.style.pointerEvents = "none";
+        }
     };
 
     const openChat = (isNearby = false) => {
