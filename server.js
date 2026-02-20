@@ -17,24 +17,22 @@ wss.on('connection', (ws) => {
         try { data = JSON.parse(message); } catch (e) { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
-            // إذا كان لديه شريك حالي، نفصله ونعيده للبحث
             if (ws.partner) {
                 const partner = ws.partner;
+                // إبلاغ الشريك أنه تم تخطيه
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
 
-                // إضافة الشريك السابق لقائمة الانتظار فوراً
+                // إضافة الشريك الذي تركته إلى قائمة الانتظار فوراً ليبدأ البحث لديه
                 if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
-
-            // تنظيف القائمة من المستخدم الحالي
+            // تنظيف القائمة من المستخدم الحالي قبل إعادة البحث
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
-            // محاولة إيجاد شريك جديد للمستخدم الحالي
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
             if (otherUser) {
                 waitingUsers = waitingUsers.filter(u => u.id !== otherUser.id);
@@ -59,7 +57,7 @@ wss.on('connection', (ws) => {
             const partner = ws.partner;
             partner.send(JSON.stringify({ type: 'partner_left' }));
             partner.partner = null;
-            // اختياري: إعادة البحث التلقائي لمن بقي وحيداً
+            // إعادة الشريك المتروك للبحث تلقائياً
             if (!waitingUsers.find(u => u.id === partner.id)) {
                 waitingUsers.push(partner);
                 partner.send(JSON.stringify({ type: 'searching' }));

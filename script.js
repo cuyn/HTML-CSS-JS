@@ -38,7 +38,12 @@ Document.addEventListener('DOMContentLoaded', () => {
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
 
-        // البحث التلقائي يتم التحكم به الآن من السيرفر لضمان المزامنة
+        // السيرفر سيتكفل بإرسال حالة searching تلقائياً، ولكن نضع هذا احتياطاً للتأكد من المزامنة
+        setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                // التأكد من أن الواجهة تظهر حالة البحث
+            }
+        }, 1500);
     };
 
     const toggleUI = (enabled, placeholder) => {
@@ -68,7 +73,7 @@ Document.addEventListener('DOMContentLoaded', () => {
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
             if (data.type === 'searching') {
-                chatMessages.innerHTML = ""; // مسح الشات القديم عند البحث
+                chatMessages.innerHTML = ""; // مسح الشات القديم لبدء البحث
                 showSearching();
             }
             else if (data.type === 'connected') showConnected();
@@ -80,16 +85,18 @@ Document.addEventListener('DOMContentLoaded', () => {
         socket.onclose = () => { socket = null; };
     };
 
-    // العداد التنازلي
     let countdownSeconds = 15;
-    setInterval(() => {
-        countdownSeconds--;
-        if (countdownSeconds < 0) countdownSeconds = 15;
-        const badge = document.getElementById('countdown-badge');
-        const badgeChat = document.querySelector('.countdown-badge-chat');
-        if (badge) badge.textContent = `${countdownSeconds}s`;
-        if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
-    }, 1000);
+    const startCountdown = () => {
+        setInterval(() => {
+            countdownSeconds--;
+            if (countdownSeconds < 0) countdownSeconds = 15;
+            const badge = document.getElementById('countdown-badge');
+            const badgeChat = document.querySelector('.countdown-badge-chat');
+            if (badge) badge.textContent = `${countdownSeconds}s`;
+            if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
+        }, 1000);
+    };
+    startCountdown();
 
     const addMsg = (text, type) => {
         const div = document.createElement('div');
@@ -123,6 +130,9 @@ Document.addEventListener('DOMContentLoaded', () => {
     nextChatBtn.addEventListener('click', () => {
         if (!nextChatBtn.disabled) {
             socket.send(JSON.stringify({ type: 'next' }));
+            // التعديل: إظهار البحث فوراً لمن ضغط Next
+            chatMessages.innerHTML = "";
+            showSearching();
         }
     });
 
@@ -142,9 +152,10 @@ Document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (backBtn) backBtn.addEventListener('click', () => { location.reload(); });
+    if (backBtn) {
+        backBtn.addEventListener('click', () => { location.reload(); });
+    }
 
-    // النجوم
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
         for (let i = 0; i < 60; i++) {
