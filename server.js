@@ -19,16 +19,21 @@ wss.on('connection', (ws) => {
         if (data.type === 'find_partner' || data.type === 'next') {
             if (ws.partner) {
                 const partner = ws.partner;
+                // Inform the partner they were skipped
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
-                // Automatically put the abandoned partner back in queue
+                
+                // Automatically put the abandoned partner back in the waiting list
                 if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
+            // Clear current user from waiting list if they were in it
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
+            
+            // Try to find a new partner for the person who clicked Next
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
             if (otherUser) {
                 waitingUsers = waitingUsers.filter(u => u.id !== otherUser.id);
