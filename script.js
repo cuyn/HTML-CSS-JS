@@ -8,16 +8,12 @@ Document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const backBtn = document.getElementById('back-to-home');
 
-    // تفعيل الأيقونات (Lucide)
     if (window.lucide) lucide.createIcons();
 
     let socket = null;
     let typingTimeout = null;
 
-    // --- وظائف الواجهة ---
-
     const showSearching = () => {
-        chatMessages.innerHTML = ""; // لضمان تنظيف الشاشة عند البحث الجديد
         const msg = document.createElement('div');
         msg.className = "self-center bg-amber-500/10 text-amber-500 text-[11px] font-medium px-4 py-2 rounded-full border border-amber-500/20 my-4 animate-pulse";
         msg.textContent = "Looking for someone...";
@@ -41,13 +37,6 @@ Document.addEventListener('DOMContentLoaded', () => {
         msg.textContent = "Stranger skipped you! Searching for new partner...";
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
-
-        // البحث التلقائي بعد ثانية ونصف
-        setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'find_partner' }));
-            }
-        }, 1500);
     };
 
     const toggleUI = (enabled, placeholder) => {
@@ -68,8 +57,6 @@ Document.addEventListener('DOMContentLoaded', () => {
         chatInput.focus();
     };
 
-    // --- إدارة الـ WebSocket ---
-
     const initSocket = () => {
         if (socket) return;
         socket = new WebSocket("wss://html-css-js--mtaaaaqlk1.replit.app");
@@ -87,23 +74,6 @@ Document.addEventListener('DOMContentLoaded', () => {
 
         socket.onclose = () => { socket = null; };
     };
-
-    // --- التعامل مع الرسائل والأزرار ---
-
-    // كود العداد التنازلي (Countdown)
-    let countdownSeconds = 15;
-    const startCountdown = () => {
-        setInterval(() => {
-            countdownSeconds--;
-            if (countdownSeconds < 0) countdownSeconds = 15;
-
-            const badge = document.getElementById('countdown-badge');
-            const badgeChat = document.querySelector('.countdown-badge-chat');
-            if (badge) badge.textContent = `${countdownSeconds}s`;
-            if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
-        }, 1000);
-    };
-    startCountdown();
 
     const addMsg = (text, type) => {
         const div = document.createElement('div');
@@ -128,7 +98,6 @@ Document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
-    // الأحداث (Events)
     startRandom.addEventListener('click', () => {
         landingPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
@@ -138,7 +107,7 @@ Document.addEventListener('DOMContentLoaded', () => {
     nextChatBtn.addEventListener('click', () => {
         if (!nextChatBtn.disabled) {
             socket.send(JSON.stringify({ type: 'next' }));
-            showSearching(); // إظهار البحث فوراً لمن ضغط Next
+            showSearching();
         }
     });
 
@@ -161,18 +130,5 @@ Document.addEventListener('DOMContentLoaded', () => {
 
     if (backBtn) {
         backBtn.addEventListener('click', () => { location.reload(); });
-    }
-
-    // كود النجوم (الخلفية)
-    const starsContainer = document.querySelector('.stars-container');
-    if (starsContainer) {
-        for (let i = 0; i < 60; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = `${Math.random() * 100}%`;
-            star.style.top = `${Math.random() * 100}%`;
-            star.style.animationDelay = `${Math.random() * 3}s`;
-            starsContainer.appendChild(star);
-        }
     }
 });
