@@ -8,7 +8,8 @@ const wss = new WebSocket.Server({ server });
 
 let waitingUsers = [];
 
-function tryMatch() {
+// دالة المطابقة
+function matchUsers() {
     while (waitingUsers.length >= 2) {
         const user1 = waitingUsers.shift();
         const user2 = waitingUsers.shift();
@@ -26,7 +27,13 @@ function tryMatch() {
     }
 }
 
+// إزالة مستخدم من الانتظار
+function removeFromWaiting(ws) {
+    waitingUsers = waitingUsers.filter(u => u !== ws);
+}
+
 wss.on('connection', (ws) => {
+
     ws.partner = null;
 
     ws.on('message', (message) => {
@@ -35,35 +42,35 @@ wss.on('connection', (ws) => {
 
         if (data.type === 'find_partner' || data.type === 'next') {
 
-            // لو عنده شريك
+            // لو عنده شريك حالياً
             if (ws.partner) {
                 const partner = ws.partner;
 
-                // 🔥 نرسل الإشعار أولاً قبل أي شيء
+                // 🔥 أهم خطوة: إشعار الطرف الثاني فوراً
                 if (partner.readyState === WebSocket.OPEN) {
                     partner.send(JSON.stringify({ type: 'partner_left' }));
                 }
 
-                // نفصل الاثنين
+                // نفصل بينهم
                 partner.partner = null;
                 ws.partner = null;
 
-                // ندخل الطرف الثاني انتظار
+                // ندخل الطرف الثاني انتظار مباشرة
                 if (partner.readyState === WebSocket.OPEN) {
+                    removeFromWaiting(partner);
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
 
-            // نحذف المستخدم الحالي من الانتظار لو موجود
-            waitingUsers = waitingUsers.filter(u => u !== ws);
-
-            // ندخله انتظار
+            // ندخل المستخدم الحالي انتظار
+            removeFromWaiting(ws);
             waitingUsers.push(ws);
+
             ws.send(JSON.stringify({ type: 'searching' }));
 
-            // نحاول نزوّج أي اثنين
-            tryMatch();
+            // نحاول المطابقة فوراً
+            matchUsers();
         }
 
         else if (data.type === 'message' || data.type === 'typing') {
@@ -74,16 +81,20 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        waitingUsers = waitingUsers.filter(u => u !== ws);
+        removeFromWaiting(ws);
 
         if (ws.partner) {
             const partner = ws.partner;
 
             if (partner.readyState === WebSocket.OPEN) {
-                partner.send(JSON.stringify({ type: 'partner_left' }));
-                waitingUsers.push(partner);
                 partner.partner = null;
-                tryMatch();
+                partner.send(JSON.stringify({ type: 'partner_left' }));
+
+                removeFromWaiting(partner);
+                waitingUsers.push(partner);
+                partner.send(JSON.stringify({ type: 'searching' }));
+
+                matchUsers();
             }
         }
     });
