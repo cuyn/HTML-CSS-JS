@@ -1,4 +1,4 @@
-const express = require('express');
+Const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 
@@ -17,48 +17,34 @@ wss.on('connection', (ws) => {
         try { data = JSON.parse(message); } catch (e) { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
-
-            // إذا كان عنده شريك
             if (ws.partner) {
                 const partner = ws.partner;
-
-                // فصل الطرفين
+                // Inform the partner they were skipped
+                partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
 
-                // حذفهم من الانتظار إذا موجودين
-                waitingUsers = waitingUsers.filter(u =>
-                    u.id !== ws.id &&
-                    u.id !== partner.id &&
-                    u.readyState === WebSocket.OPEN
-                );
-
-                // إدخال الاثنين للبحث من جديد
-                if (ws.readyState === WebSocket.OPEN) {
-                    waitingUsers.push(ws);
-                    ws.send(JSON.stringify({ type: 'searching' }));
-                }
-
-                if (partner.readyState === WebSocket.OPEN) {
+                // Automatically put the abandoned partner back in the waiting list
+                if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
+            // Clear current user from waiting list if they were in it
+            waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
-            // محاولة ربط أي شخصين ينتظرون
-            if (waitingUsers.length >= 2) {
-                const user1 = waitingUsers.shift();
-                const user2 = waitingUsers.shift();
-
-                if (user1.readyState === WebSocket.OPEN && user2.readyState === WebSocket.OPEN) {
-                    user1.partner = user2;
-                    user2.partner = user1;
-
-                    user1.send(JSON.stringify({ type: 'connected' }));
-                    user2.send(JSON.stringify({ type: 'connected' }));
-                }
+            // Try to find a new partner for the person who clicked Next
+            const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
+            if (otherUser) {
+                waitingUsers = waitingUsers.filter(u => u.id !== otherUser.id);
+                ws.partner = otherUser;
+                otherUser.partner = ws;
+                ws.send(JSON.stringify({ type: 'connected' }));
+                otherUser.send(JSON.stringify({ type: 'connected' }));
+            } else {
+                waitingUsers.push(ws);
+                ws.send(JSON.stringify({ type: 'searching' }));
             }
-
         } else if (data.type === 'message' || data.type === 'typing') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
                 ws.partner.send(JSON.stringify(data));
@@ -68,7 +54,6 @@ wss.on('connection', (ws) => {
 
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
-
         if (ws.partner) {
             ws.partner.send(JSON.stringify({ type: 'partner_left' }));
             ws.partner.partner = null;
