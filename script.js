@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startRandom = document.getElementById('start-random');
-    const skipBtn = document.getElementById('next-chat'); // الزر نفسه بس اسمه skip الآن
+    const skipBtn = document.getElementById('next-chat'); // زر Next/Skip
     const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
@@ -104,9 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initSocket();
     });
 
+    // زر Next/Skip يفصل الطرفين ويدخل البحث فورًا
     skipBtn.addEventListener('click', () => {
-        if (!skipBtn.disabled) {
-            socket.send(JSON.stringify({ type: 'next' })); // السيرفر لا يزال يستخدم 'next' كنوع الرسالة
+        if (socket?.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'next' }));
             showSearching();
         }
     });
@@ -127,7 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (backBtn) backBtn.addEventListener('click', () => { location.reload(); });
+    if (backBtn) backBtn.addEventListener('click', () => {
+        if (socket?.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'next' }));
+            showSearching();
+        }
+    });
 
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
@@ -140,4 +146,4 @@ document.addEventListener('DOMContentLoaded', () => {
             starsContainer.appendChild(star);
         }
     }
-});
+}); 
