@@ -16,12 +16,17 @@ wss.on('connection', (ws) => {
         let data;
         try { data = JSON.parse(message); } catch (e) { return; }
 
-        if (data.type === 'find_partner') {
+        if (data.type === 'find_partner' || data.type === 'next') {
             if (ws.partner) {
                 const partner = ws.partner;
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
+                // Automatically put the abandoned partner back in queue
+                if (!waitingUsers.find(u => u.id === partner.id)) {
+                    waitingUsers.push(partner);
+                    partner.send(JSON.stringify({ type: 'searching' }));
+                }
             }
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);

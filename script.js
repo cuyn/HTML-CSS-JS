@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextChatBtn.addEventListener('click', () => {
         if (!nextChatBtn.disabled) {
-            socket.send(JSON.stringify({ type: 'find_partner' }));
+            socket.send(JSON.stringify({ type: 'next' }));
             showSearching();
         }
     });
