@@ -1,4 +1,4 @@
-Document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startRandom = document.getElementById('start-random');
