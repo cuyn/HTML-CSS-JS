@@ -23,12 +23,11 @@ wss.on('connection', (ws) => {
                 partner.partner = null;
                 ws.partner = null;
 
-                // --- الإضافة المطلوبة هنا ---
+                // إضافة الشريك السابق للبحث فوراً (هذه الإضافة المطلوبة)
                 if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
-                // -------------------------
             }
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 

@@ -8,12 +8,16 @@ Document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const backBtn = document.getElementById('back-to-home');
 
+    // تفعيل الأيقونات (Lucide)
     if (window.lucide) lucide.createIcons();
 
     let socket = null;
     let typingTimeout = null;
 
+    // --- وظائف الواجهة ---
+
     const showSearching = () => {
+        chatMessages.innerHTML = ""; // لضمان تنظيف الشاشة عند البحث الجديد
         const msg = document.createElement('div');
         msg.className = "self-center bg-amber-500/10 text-amber-500 text-[11px] font-medium px-4 py-2 rounded-full border border-amber-500/20 my-4 animate-pulse";
         msg.textContent = "Looking for someone...";
@@ -38,10 +42,10 @@ Document.addEventListener('DOMContentLoaded', () => {
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
 
-        // السيرفر سيتكفل بإرسال حالة searching تلقائياً، ولكن نضع هذا احتياطاً للتأكد من المزامنة
+        // البحث التلقائي بعد ثانية ونصف
         setTimeout(() => {
             if (socket && socket.readyState === WebSocket.OPEN) {
-                // التأكد من أن الواجهة تظهر حالة البحث
+                socket.send(JSON.stringify({ type: 'find_partner' }));
             }
         }, 1500);
     };
@@ -64,6 +68,8 @@ Document.addEventListener('DOMContentLoaded', () => {
         chatInput.focus();
     };
 
+    // --- إدارة الـ WebSocket ---
+
     const initSocket = () => {
         if (socket) return;
         socket = new WebSocket("wss://html-css-js--mtaaaaqlk1.replit.app");
@@ -72,10 +78,7 @@ Document.addEventListener('DOMContentLoaded', () => {
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            if (data.type === 'searching') {
-                chatMessages.innerHTML = ""; // مسح الشات القديم لبدء البحث
-                showSearching();
-            }
+            if (data.type === 'searching') showSearching();
             else if (data.type === 'connected') showConnected();
             else if (data.type === 'message') { removeTypingIndicator(); addMsg(data.text, 'received'); }
             else if (data.type === 'typing') { showTyping(); clearTimeout(typingTimeout); typingTimeout = setTimeout(removeTypingIndicator, 3000); }
@@ -85,11 +88,15 @@ Document.addEventListener('DOMContentLoaded', () => {
         socket.onclose = () => { socket = null; };
     };
 
+    // --- التعامل مع الرسائل والأزرار ---
+
+    // كود العداد التنازلي (Countdown)
     let countdownSeconds = 15;
     const startCountdown = () => {
         setInterval(() => {
             countdownSeconds--;
             if (countdownSeconds < 0) countdownSeconds = 15;
+
             const badge = document.getElementById('countdown-badge');
             const badgeChat = document.querySelector('.countdown-badge-chat');
             if (badge) badge.textContent = `${countdownSeconds}s`;
@@ -121,6 +128,7 @@ Document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
+    // الأحداث (Events)
     startRandom.addEventListener('click', () => {
         landingPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
@@ -130,9 +138,7 @@ Document.addEventListener('DOMContentLoaded', () => {
     nextChatBtn.addEventListener('click', () => {
         if (!nextChatBtn.disabled) {
             socket.send(JSON.stringify({ type: 'next' }));
-            // التعديل: إظهار البحث فوراً لمن ضغط Next
-            chatMessages.innerHTML = "";
-            showSearching();
+            showSearching(); // إظهار البحث فوراً لمن ضغط Next
         }
     });
 
@@ -146,6 +152,7 @@ Document.addEventListener('DOMContentLoaded', () => {
     });
 
     chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendButton.click(); });
+
     chatInput.addEventListener('input', () => {
         if (socket?.readyState === WebSocket.OPEN && !chatInput.disabled) {
             socket.send(JSON.stringify({ type: 'typing' }));
@@ -156,6 +163,7 @@ Document.addEventListener('DOMContentLoaded', () => {
         backBtn.addEventListener('click', () => { location.reload(); });
     }
 
+    // كود النجوم (الخلفية)
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
         for (let i = 0; i < 60; i++) {
