@@ -21,7 +21,7 @@ wss.on('connection', (ws) => {
             if (ws.partner) {
                 const partner = ws.partner;
 
-                // أرسل للطرف الثاني partner_left ليعرف أن الشريك ضغط Next
+                // أرسل للطرف الثاني partner_left فوراً
                 if (partner.readyState === WebSocket.OPEN) {
                     partner.send(JSON.stringify({ type: 'partner_left' }));
                 }
@@ -47,13 +47,12 @@ wss.on('connection', (ws) => {
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             } else {
-                // إذا ما عنده شريك
                 waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
                 waitingUsers.push(ws);
                 ws.send(JSON.stringify({ type: 'searching' }));
             }
 
-            // محاولة ربط أي شخصين ينتظرون
+            // ربط أي شخصين ينتظرون
             while (waitingUsers.length >= 2) {
                 const user1 = waitingUsers.shift();
                 const user2 = waitingUsers.shift();

@@ -14,12 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let socket = null;
     let typingTimeout = null;
 
-    // --- وظائف الواجهة ---
-
     const showSearching = () => {
         const msg = document.createElement('div');
-        msg.className = "self-center bg-amber-500/10 text-amber-500 text-[11px] font-medium px-4 py-2 rounded-full border border-amber-500/20 my-4 animate-pulse";
-        msg.textContent = "Looking for someone...";
+        msg.className = "self-center bg-amber-500/20 text-amber-600 text-[12px] font-bold px-5 py-3 rounded-xl border border-amber-400/30 my-4 animate-pulse shadow-lg";
+        msg.textContent = "🌟 Searching for an awesome stranger... 🌟";
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
     };
@@ -27,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const showConnected = () => {
         chatMessages.innerHTML = ""; 
         const msg = document.createElement('div');
-        msg.className = "self-center bg-green-500/10 text-green-500 text-[11px] font-medium px-4 py-1.5 rounded-full border border-green-500/20 my-4";
-        msg.textContent = "Stranger connected! Say hi 👋🏻";
+        msg.className = "self-center bg-green-500/20 text-green-600 text-[12px] font-bold px-5 py-3 rounded-xl border border-green-400/30 my-4 shadow-lg animate-fade-in";
+        msg.textContent = "✨ Stranger connected! Say hi! 👋";
         chatMessages.appendChild(msg);
         enableChatUI();
     };
@@ -36,17 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const handlePartnerLeft = () => {
         removeTypingIndicator();
         const msg = document.createElement('div');
-        msg.className = "self-center bg-red-500/10 text-red-500 text-[11px] font-bold px-4 py-2 rounded-full border border-red-500/20 my-4 shadow-lg animate-bounce";
-        msg.textContent = "Stranger skipped you! Searching for new partner...";
+        msg.className = "self-center bg-red-500/20 text-red-600 text-[12px] font-extrabold px-5 py-3 rounded-xl border border-red-400/30 my-4 shadow-lg animate-bounce";
+        msg.textContent = "⚡ Stranger left! Searching for a new adventure...";
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
-
-        // البحث التلقائي بعد ثانية ونصف
-        setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'find_partner' }));
-            }
-        }, 1500);
     };
 
     const toggleUI = (enabled, placeholder) => {
@@ -60,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const enableChatUI = () => {
         chatInput.disabled = false;
-        chatInput.placeholder = "Type a message...";
+        chatInput.placeholder = "Type something awesome...";
         nextChatBtn.disabled = false;
         nextChatBtn.style.opacity = "1";
         sendButton.disabled = false;
         chatInput.focus();
     };
-
-    // --- إدارة الـ WebSocket ---
 
     const initSocket = () => {
         if (socket) return;
@@ -87,27 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.onclose = () => { socket = null; };
     };
 
-    // --- التعامل مع الرسائل والأزرار ---
-
-    // كود العداد التنازلي (Countdown)
-    let countdownSeconds = 15;
-    const startCountdown = () => {
-        setInterval(() => {
-            countdownSeconds--;
-            if (countdownSeconds < 0) countdownSeconds = 15;
-
-            const badge = document.getElementById('countdown-badge');
-            const badgeChat = document.querySelector('.countdown-badge-chat');
-            if (badge) badge.textContent = `${countdownSeconds}s`;
-            if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
-        }, 1000);
-    };
-    startCountdown();
-
     const addMsg = (text, type) => {
         const div = document.createElement('div');
-        div.className = `message-container ${type}-container`;
-        div.innerHTML = `<div class="message ${type}">${text}</div>`;
+        div.className = `message-container ${type}-container animate-fade-in`;
+        div.innerHTML = `<div class="message ${type} px-4 py-2 rounded-xl shadow-lg bg-opacity-20">${text}</div>`;
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
@@ -116,8 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('typing-indicator')) return;
         const div = document.createElement('div');
         div.id = 'typing-indicator';
-        div.className = "self-start flex items-center gap-1 ml-4 mb-2";
-        div.innerHTML = `<span class="text-[10px] text-orange-500 font-bold uppercase tracking-tight">typing</span><div class="flex gap-0.5"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0.2s"></span></div>`;
+        div.className = "self-start flex items-center gap-2 ml-4 mb-2 animate-pulse";
+        div.innerHTML = `<span class="text-[10px] text-orange-500 font-bold uppercase tracking-tight">typing...</span><div class="flex gap-1"><span class="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0.2s"></span><span class="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style="animation-delay:0.4s"></span></div>`;
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
@@ -127,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
-    // الأحداث (Events)
+    // الأحداث
     startRandom.addEventListener('click', () => {
         landingPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
@@ -144,25 +116,22 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton.addEventListener('click', () => {
         const text = chatInput.value.trim();
         if (text && socket?.readyState === WebSocket.OPEN && !chatInput.disabled) {
-            socket.send(JSON.stringify({ type: 'message', text: text }));
+            socket.send(JSON.stringify({ type: 'message', text }));
             addMsg(text, 'sent');
             chatInput.value = '';
         }
     });
 
     chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendButton.click(); });
-
     chatInput.addEventListener('input', () => {
         if (socket?.readyState === WebSocket.OPEN && !chatInput.disabled) {
             socket.send(JSON.stringify({ type: 'typing' }));
         }
     });
 
-    if (backBtn) {
-        backBtn.addEventListener('click', () => { location.reload(); });
-    }
+    if (backBtn) backBtn.addEventListener('click', () => { location.reload(); });
 
-    // كود النجوم (الخلفية)
+    // نجوم الخلفية
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
         for (let i = 0; i < 60; i++) {
