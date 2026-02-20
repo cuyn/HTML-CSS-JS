@@ -22,7 +22,9 @@ wss.on('connection', (ws) => {
                 const partner = ws.partner;
 
                 // أرسل للطرف الثاني partner_left ليعرف أن الشريك ضغط Next
-                partner.send(JSON.stringify({ type: 'partner_left' }));
+                if (partner.readyState === WebSocket.OPEN) {
+                    partner.send(JSON.stringify({ type: 'partner_left' }));
+                }
 
                 // فصل الطرفين
                 ws.partner = null;
@@ -52,7 +54,7 @@ wss.on('connection', (ws) => {
             }
 
             // محاولة ربط أي شخصين ينتظرون
-            if (waitingUsers.length >= 2) {
+            while (waitingUsers.length >= 2) {
                 const user1 = waitingUsers.shift();
                 const user2 = waitingUsers.shift();
 
@@ -74,7 +76,7 @@ wss.on('connection', (ws) => {
 
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
-        if (ws.partner) {
+        if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
             ws.partner.send(JSON.stringify({ type: 'partner_left' }));
             ws.partner.partner = null;
         }
