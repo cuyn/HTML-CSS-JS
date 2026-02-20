@@ -23,6 +23,11 @@ function matchUsers() {
 
             user1.send(JSON.stringify({ type: 'connected' }));
             user2.send(JSON.stringify({ type: 'connected' }));
+        } else {
+            // إذا كان أحدهم مغلقاً، نحاول مطابقة الباقي
+            if (user1.readyState === WebSocket.OPEN) waitingUsers.unshift(user1);
+            if (user2.readyState === WebSocket.OPEN) waitingUsers.unshift(user2);
+            break; 
         }
     }
 }
@@ -33,12 +38,14 @@ function removeFromWaiting(ws) {
 }
 
 wss.on('connection', (ws) => {
-
     ws.partner = null;
 
     ws.on('message', (message) => {
         let data;
-        try { data = JSON.parse(message); } catch { return; }
+        try { 
+            // تحويل Buffer إلى string أولاً لتجنب المشاكل في بعض البيئات
+            data = JSON.parse(message.toString()); 
+        } catch { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
 
@@ -46,25 +53,21 @@ wss.on('connection', (ws) => {
             if (ws.partner) {
                 const partner = ws.partner;
 
-                // 🔥 أهم خطوة: إشعار الطرف الثاني فوراً
+                // إشعار الطرف الثاني فوراً
                 if (partner.readyState === WebSocket.OPEN) {
                     partner.send(JSON.stringify({ type: 'partner_left' }));
-                }
 
-                // نفصل بينهم
-                partner.partner = null;
-                ws.partner = null;
-
-                // ندخل الطرف الثاني انتظار مباشرة
-                if (partner.readyState === WebSocket.OPEN) {
+                    partner.partner = null;
+                    // ندخل الطرف الثاني انتظار مباشرة
                     removeFromWaiting(partner);
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
+                ws.partner = null;
             }
 
             // ندخل المستخدم الحالي انتظار
-            removeFromWaiting(ws);
+            removeFromWaiting(ws); // نضمن عدم تكرار المستخدم في القائمة
             waitingUsers.push(ws);
 
             ws.send(JSON.stringify({ type: 'searching' }));
@@ -85,6 +88,7 @@ wss.on('connection', (ws) => {
 
         if (ws.partner) {
             const partner = ws.partner;
+            ws.partner = null; // تنظيف الذاكرة
 
             if (partner.readyState === WebSocket.OPEN) {
                 partner.partner = null;
@@ -98,7 +102,14 @@ wss.on('connection', (ws) => {
             }
         }
     });
+
+    // معالجة الأخطاء لمنع توقف السيرفر
+    ws.on('error', () => {
+        removeFromWaiting(ws);
+    });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, '0.0.0.0');
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
+});
