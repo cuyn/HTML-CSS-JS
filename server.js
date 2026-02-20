@@ -19,18 +19,17 @@ wss.on('connection', (ws) => {
         if (data.type === 'find_partner' || data.type === 'next') {
             if (ws.partner) {
                 const partner = ws.partner;
-                // إبلاغ الشريك أنه تم تخطيه
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
 
-                // إضافة الشريك الذي تركته إلى قائمة الانتظار فوراً ليبدأ البحث لديه
+                // --- الإضافة المطلوبة هنا ---
                 if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
+                // -------------------------
             }
-            // تنظيف القائمة من المستخدم الحالي قبل إعادة البحث
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
 
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
@@ -54,14 +53,8 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
         if (ws.partner) {
-            const partner = ws.partner;
-            partner.send(JSON.stringify({ type: 'partner_left' }));
-            partner.partner = null;
-            // إعادة الشريك المتروك للبحث تلقائياً
-            if (!waitingUsers.find(u => u.id === partner.id)) {
-                waitingUsers.push(partner);
-                partner.send(JSON.stringify({ type: 'searching' }));
-            }
+            ws.partner.send(JSON.stringify({ type: 'partner_left' }));
+            ws.partner.partner = null;
         }
     });
 });
