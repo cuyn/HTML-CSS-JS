@@ -2,13 +2,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startRandom = document.getElementById('start-random');
-    const nextChatBtn = document.getElementById('next-chat');
+    const skipBtn = document.getElementById('next-chat'); // الزر نفسه بس اسمه skip الآن
     const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
     const backBtn = document.getElementById('back-to-home');
 
-    // تفعيل الأيقونات (Lucide)
     if (window.lucide) lucide.createIcons();
 
     let socket = null;
@@ -43,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleUI = (enabled, placeholder) => {
         chatInput.disabled = !enabled;
         chatInput.placeholder = placeholder;
-        nextChatBtn.disabled = !enabled;
-        nextChatBtn.style.opacity = enabled ? "1" : "0.5";
+        skipBtn.disabled = !enabled;
+        skipBtn.style.opacity = enabled ? "1" : "0.5";
         sendButton.disabled = !enabled;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
@@ -52,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const enableChatUI = () => {
         chatInput.disabled = false;
         chatInput.placeholder = "Type something awesome...";
-        nextChatBtn.disabled = false;
-        nextChatBtn.style.opacity = "1";
+        skipBtn.disabled = false;
+        skipBtn.style.opacity = "1";
         sendButton.disabled = false;
         chatInput.focus();
     };
@@ -99,16 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
-    // الأحداث
     startRandom.addEventListener('click', () => {
         landingPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
         initSocket();
     });
 
-    nextChatBtn.addEventListener('click', () => {
-        if (!nextChatBtn.disabled) {
-            socket.send(JSON.stringify({ type: 'next' }));
+    skipBtn.addEventListener('click', () => {
+        if (!skipBtn.disabled) {
+            socket.send(JSON.stringify({ type: 'next' })); // السيرفر لا يزال يستخدم 'next' كنوع الرسالة
             showSearching();
         }
     });
@@ -131,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (backBtn) backBtn.addEventListener('click', () => { location.reload(); });
 
-    // نجوم الخلفية
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
         for (let i = 0; i < 60; i++) {

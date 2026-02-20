@@ -21,23 +21,19 @@ wss.on('connection', (ws) => {
             if (ws.partner) {
                 const partner = ws.partner;
 
-                // أرسل للطرف الثاني partner_left فوراً
                 if (partner.readyState === WebSocket.OPEN) {
                     partner.send(JSON.stringify({ type: 'partner_left' }));
                 }
 
-                // فصل الطرفين
                 ws.partner = null;
                 partner.partner = null;
 
-                // حذفهم من waitingUsers إذا موجودين
                 waitingUsers = waitingUsers.filter(u =>
                     u.id !== ws.id &&
                     u.id !== partner.id &&
                     u.readyState === WebSocket.OPEN
                 );
 
-                // إدخال الاثنين في البحث من جديد
                 if (ws.readyState === WebSocket.OPEN) {
                     waitingUsers.push(ws);
                     ws.send(JSON.stringify({ type: 'searching' }));
@@ -52,7 +48,6 @@ wss.on('connection', (ws) => {
                 ws.send(JSON.stringify({ type: 'searching' }));
             }
 
-            // ربط أي شخصين ينتظرون
             while (waitingUsers.length >= 2) {
                 const user1 = waitingUsers.shift();
                 const user2 = waitingUsers.shift();
