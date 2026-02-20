@@ -27,7 +27,6 @@ function tryMatch() {
 }
 
 wss.on('connection', (ws) => {
-    ws.id = Math.random().toString(36).substr(2, 9);
     ws.partner = null;
 
     ws.on('message', (message) => {
@@ -36,19 +35,23 @@ wss.on('connection', (ws) => {
 
         if (data.type === 'find_partner' || data.type === 'next') {
 
-            // إذا عنده شريك
+            // لو عنده شريك
             if (ws.partner) {
                 const partner = ws.partner;
 
-                // نفصل بينهم
+                // 🔥 نرسل الإشعار أولاً قبل أي شيء
+                if (partner.readyState === WebSocket.OPEN) {
+                    partner.send(JSON.stringify({ type: 'partner_left' }));
+                }
+
+                // نفصل الاثنين
                 partner.partner = null;
                 ws.partner = null;
 
+                // ندخل الطرف الثاني انتظار
                 if (partner.readyState === WebSocket.OPEN) {
-                    partner.send(JSON.stringify({ type: 'partner_left' }));
-
-                    // ندخله فوراً قائمة الانتظار
                     waitingUsers.push(partner);
+                    partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
 
@@ -59,7 +62,7 @@ wss.on('connection', (ws) => {
             waitingUsers.push(ws);
             ws.send(JSON.stringify({ type: 'searching' }));
 
-            // نحاول نزوّج أي اثنين متاحين
+            // نحاول نزوّج أي اثنين
             tryMatch();
         }
 
@@ -75,11 +78,11 @@ wss.on('connection', (ws) => {
 
         if (ws.partner) {
             const partner = ws.partner;
-            partner.partner = null;
 
             if (partner.readyState === WebSocket.OPEN) {
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 waitingUsers.push(partner);
+                partner.partner = null;
                 tryMatch();
             }
         }
