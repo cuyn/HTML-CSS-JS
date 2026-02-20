@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+Document.addEventListener('DOMContentLoaded', () => {
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startRandom = document.getElementById('start-random');
@@ -8,13 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const backBtn = document.getElementById('back-to-home');
 
-    // تفعيل الأيقونات (Lucide)
     if (window.lucide) lucide.createIcons();
 
     let socket = null;
     let typingTimeout = null;
-
-    // --- وظائف الواجهة ---
 
     const showSearching = () => {
         const msg = document.createElement('div');
@@ -41,12 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.appendChild(msg);
         toggleUI(false, "Searching...");
 
-        // البحث التلقائي بعد ثانية ونصف
-        setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'find_partner' }));
-            }
-        }, 1500);
+        // البحث التلقائي يتم التحكم به الآن من السيرفر لضمان المزامنة
     };
 
     const toggleUI = (enabled, placeholder) => {
@@ -67,8 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.focus();
     };
 
-    // --- إدارة الـ WebSocket ---
-
     const initSocket = () => {
         if (socket) return;
         socket = new WebSocket("wss://html-css-js--mtaaaaqlk1.replit.app");
@@ -77,7 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            if (data.type === 'searching') showSearching();
+            if (data.type === 'searching') {
+                chatMessages.innerHTML = ""; // مسح الشات القديم عند البحث
+                showSearching();
+            }
             else if (data.type === 'connected') showConnected();
             else if (data.type === 'message') { removeTypingIndicator(); addMsg(data.text, 'received'); }
             else if (data.type === 'typing') { showTyping(); clearTimeout(typingTimeout); typingTimeout = setTimeout(removeTypingIndicator, 3000); }
@@ -87,22 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.onclose = () => { socket = null; };
     };
 
-    // --- التعامل مع الرسائل والأزرار ---
-    
-    // كود العداد التنازلي (Countdown)
+    // العداد التنازلي
     let countdownSeconds = 15;
-    const startCountdown = () => {
-        setInterval(() => {
-            countdownSeconds--;
-            if (countdownSeconds < 0) countdownSeconds = 15;
-            
-            const badge = document.getElementById('countdown-badge');
-            const badgeChat = document.querySelector('.countdown-badge-chat');
-            if (badge) badge.textContent = `${countdownSeconds}s`;
-            if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
-        }, 1000);
-    };
-    startCountdown();
+    setInterval(() => {
+        countdownSeconds--;
+        if (countdownSeconds < 0) countdownSeconds = 15;
+        const badge = document.getElementById('countdown-badge');
+        const badgeChat = document.querySelector('.countdown-badge-chat');
+        if (badge) badge.textContent = `${countdownSeconds}s`;
+        if (badgeChat) badgeChat.textContent = `${countdownSeconds}s`;
+    }, 1000);
 
     const addMsg = (text, type) => {
         const div = document.createElement('div');
@@ -127,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     };
 
-    // الأحداث (Events)
     startRandom.addEventListener('click', () => {
         landingPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
@@ -137,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
     nextChatBtn.addEventListener('click', () => {
         if (!nextChatBtn.disabled) {
             socket.send(JSON.stringify({ type: 'next' }));
-            showSearching();
         }
     });
 
@@ -151,18 +136,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendButton.click(); });
-
     chatInput.addEventListener('input', () => {
         if (socket?.readyState === WebSocket.OPEN && !chatInput.disabled) {
             socket.send(JSON.stringify({ type: 'typing' }));
         }
     });
 
-    if (backBtn) {
-        backBtn.addEventListener('click', () => { location.reload(); });
-    }
+    if (backBtn) backBtn.addEventListener('click', () => { location.reload(); });
 
-    // كود النجوم (الخلفية)
+    // النجوم
     const starsContainer = document.querySelector('.stars-container');
     if (starsContainer) {
         for (let i = 0; i < 60; i++) {

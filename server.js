@@ -17,23 +17,24 @@ wss.on('connection', (ws) => {
         try { data = JSON.parse(message); } catch (e) { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
+            // إذا كان لديه شريك حالي، نفصله ونعيده للبحث
             if (ws.partner) {
                 const partner = ws.partner;
-                // Inform the partner they were skipped
                 partner.send(JSON.stringify({ type: 'partner_left' }));
                 partner.partner = null;
                 ws.partner = null;
-                
-                // Automatically put the abandoned partner back in the waiting list
+
+                // إضافة الشريك السابق لقائمة الانتظار فوراً
                 if (!waitingUsers.find(u => u.id === partner.id)) {
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
             }
-            // Clear current user from waiting list if they were in it
+
+            // تنظيف القائمة من المستخدم الحالي
             waitingUsers = waitingUsers.filter(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
-            
-            // Try to find a new partner for the person who clicked Next
+
+            // محاولة إيجاد شريك جديد للمستخدم الحالي
             const otherUser = waitingUsers.find(u => u.id !== ws.id && u.readyState === WebSocket.OPEN);
             if (otherUser) {
                 waitingUsers = waitingUsers.filter(u => u.id !== otherUser.id);
@@ -55,8 +56,14 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         waitingUsers = waitingUsers.filter(u => u.id !== ws.id);
         if (ws.partner) {
-            ws.partner.send(JSON.stringify({ type: 'partner_left' }));
-            ws.partner.partner = null;
+            const partner = ws.partner;
+            partner.send(JSON.stringify({ type: 'partner_left' }));
+            partner.partner = null;
+            // اختياري: إعادة البحث التلقائي لمن بقي وحيداً
+            if (!waitingUsers.find(u => u.id === partner.id)) {
+                waitingUsers.push(partner);
+                partner.send(JSON.stringify({ type: 'searching' }));
+            }
         }
     });
 });
