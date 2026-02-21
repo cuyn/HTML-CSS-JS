@@ -190,18 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     addMessage(data.text, 'received');
                 } else if (data.type === 'typing') {
                     showTypingIndicator();
-                } else if (data.type === 'disconnected' || data.type === 'skipped') {
-                    if (chatInput) {
-                        chatInput.disabled = true;
-                        chatInput.placeholder = "Partner left. Searching...";
-                    }
-                    if (sendButton) sendButton.disabled = true;
-                    if (data.type === 'disconnected') {
-                        addStatusMessage("Partner disconnected.");
-                    } else {
-                        addStatusMessage("User skipped you. Finding someone else...");
-                        setTimeout(() => findPartner(), 1500);
-                    }
+                } else if (data.type === 'disconnected' || data.type === 'skipped' || data.type === 'partner_left') {
+                    handlePartnerLeft();
                 }
             };
 
@@ -224,26 +214,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const findPartner = () => {
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-            initWebSocket();
-            const checkInt = setInterval(() => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    clearInterval(checkInt);
-                    socket.send(JSON.stringify({ type: 'find_partner' }));
-                }
-            }, 100);
-        } else {
-            socket.send(JSON.stringify({ type: 'find_partner' }));
-        }
+    const toggleUI = (enabled, placeholder) => {
+        chatInput.disabled = !enabled;
+        chatInput.placeholder = placeholder;
+        nextChatBtn.disabled = !enabled;
+        nextChatBtn.style.opacity = enabled ? "1" : "0.5";
+        nextChatBtn.style.pointerEvents = enabled ? "auto" : "none";
+        sendButton.disabled = !enabled;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
 
+    const enableChatUI = () => {
+        chatInput.disabled = false;
+        chatInput.placeholder = "Type a message...";
+        nextChatBtn.disabled = false;
+        nextChatBtn.style.opacity = "1";
+        nextChatBtn.style.pointerEvents = "auto";
+        sendButton.disabled = false;
+        chatInput.focus();
+    };
+
+    const showSearching = () => {
         chatMessages.innerHTML = "";
         addStatusMessage("Searching for a partner...");
-        if (chatInput) {
-            chatInput.disabled = true;
-            chatInput.placeholder = "Searching for partner...";
-        }
-        if (sendButton) sendButton.disabled = true;
+        toggleUI(false, "Searching for partner...");
+    };
+
+    const handlePartnerLeft = () => {
+        removeTypingIndicator();
+        addStatusMessage("Stranger skipped you! Redirecting...");
+        toggleUI(false, "Redirecting...");
+
+        setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'next' }));
+                showSearching();
+            }
+        }, 1500);
     };
 
     const openChat = (isNearby = false) => {
@@ -258,19 +265,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (landingPage) landingPage.classList.add('hidden');
                     if (chatPage) chatPage.classList.remove('hidden');
                     if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
-                    findPartner();
+                    
+                    // Delay search for 5 seconds when coming back
+                    showSearching();
+                    setTimeout(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send(JSON.stringify({ type: 'find_partner' }));
+                        } else {
+                            initWebSocket();
+                        }
+                    }, 5000);
                 },
                 (error) => {
                     alert("Unable to retrieve your location. Using random match instead.");
                     if (landingPage) landingPage.classList.add('hidden');
                     if (chatPage) chatPage.classList.remove('hidden');
-                    findPartner();
+                    
+                    showSearching();
+                    setTimeout(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send(JSON.stringify({ type: 'find_partner' }));
+                        } else {
+                            initWebSocket();
+                        }
+                    }, 5000);
                 }
             );
         } else {
             if (landingPage) landingPage.classList.add('hidden');
             if (chatPage) chatPage.classList.remove('hidden');
-            findPartner();
+            
+            showSearching();
+            setTimeout(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ type: 'find_partner' }));
+                } else {
+                    initWebSocket();
+                }
+            }, 5000);
         }
     };
 
@@ -286,8 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextChatBtn = document.getElementById('next-chat');
     if (nextChatBtn) {
         nextChatBtn.addEventListener('click', () => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
+            if (!nextChatBtn.disabled && socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ type: 'next' }));
+                showSearching();
             }
         });
     }
