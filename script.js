@@ -308,6 +308,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (startNearby) startNearby.addEventListener('click', () => openChat(true));
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
+    const backToHome = document.getElementById('back-to-home');
+    if (backToHome) {
+        backToHome.addEventListener('click', () => {
+            console.log("Back to home clicked");
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            if (chatPage) chatPage.classList.add('hidden');
+            if (landingPage) landingPage.classList.remove('hidden');
+            
+            // Reset chat state
+            chatMessages.innerHTML = "";
+            toggleUI(true, "Type a message...");
+        });
+    }
+
     if (exitChat) {
         exitChat.addEventListener('click', () => {
             console.log("Exit chat clicked");
