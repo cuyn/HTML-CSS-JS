@@ -310,8 +310,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
     if (exitChat) {
         exitChat.addEventListener('click', () => {
+            console.log("Exit chat clicked");
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
             if (chatPage) chatPage.classList.add('hidden');
             if (landingPage) landingPage.classList.remove('hidden');
+            
+            // Reset chat state
+            chatMessages.innerHTML = "";
+            toggleUI(true, "Type a message...");
         });
     }
 
