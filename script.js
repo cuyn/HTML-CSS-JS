@@ -99,19 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const addErrorMessage = (text) => {
-        if (chatMessages) {
-            const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-            existingMsgs.forEach(msg => msg.remove());
-            const msgDiv = document.createElement('div');
-            msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
-            msgDiv.textContent = text;
-            chatMessages.appendChild(msgDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            return msgDiv;
-        }
-    };
-
     let socket = null;
 
     const initWebSocket = () => {
@@ -122,15 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.onopen = () => {
             console.log("Connected to Server");
-            // بمجرد الاتصال، نرسل طلب البحث فوراً
+            // بمجرد فتح الاتصال نرسل طلب البحث فوراً
             socket.send(JSON.stringify({ type: 'find_partner' }));
         };
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
+
             if (data.type === 'searching') {
                 showSearching();
-            } else if (data.type === 'connected') {
+            } 
+            else if (data.type === 'connected') {
                 enableChatUI();
                 chatMessages.innerHTML = "";
                 const msgDiv = document.createElement('div');
@@ -138,13 +127,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgDiv.textContent = "Connected with a real person! Say hi!";
                 chatMessages.appendChild(msgDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-            } else if (data.type === 'message') {
+            } 
+            else if (data.type === 'message') {
                 removeTypingIndicator();
                 addMessage(data.text, 'received');
-            } else if (data.type === 'typing') {
+            } 
+            else if (data.type === 'typing') {
                 showTypingIndicator();
-            } else if (data.type === 'partner_left') {
-                handlePartnerLeft();
+            } 
+            // الحل لمشكلة يوسف ومحمد (التنبيه عند التخطي)
+            else if (data.type === 'partner_left') {
+                removeTypingIndicator();
+                addStatusMessage("Stranger skipped you! Redirecting...");
+                toggleUI(false, "Redirecting...");
+                // السيرفر سيعيد يوسف للقائمة تلقائياً، نحن فقط ننتظر التحديث للواجهة
             }
         };
 
@@ -157,41 +153,34 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const toggleUI = (enabled, placeholder) => {
-        chatInput.disabled = !enabled;
-        chatInput.placeholder = placeholder;
+        if (chatInput) {
+            chatInput.disabled = !enabled;
+            chatInput.placeholder = placeholder;
+        }
         const isSearching = placeholder.toLowerCase().includes("searching") || placeholder.toLowerCase().includes("redirecting");
         if (nextChatBtn) {
             nextChatBtn.disabled = isSearching;
             nextChatBtn.style.opacity = isSearching ? "0.5" : "1";
         }
-        sendButton.disabled = !enabled;
+        if (sendButton) sendButton.disabled = !enabled;
     };
 
     const enableChatUI = () => {
-        chatInput.disabled = false;
-        chatInput.placeholder = "Type a message...";
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = "Type a message...";
+        }
         if (nextChatBtn) {
             nextChatBtn.disabled = false;
             nextChatBtn.style.opacity = "1";
         }
-        sendButton.disabled = false;
+        if (sendButton) sendButton.disabled = false;
     };
 
     const showSearching = () => {
         chatMessages.innerHTML = "";
         addStatusMessage("Searching for a partner...");
         toggleUI(false, "Searching for partner...");
-    };
-
-    const handlePartnerLeft = () => {
-        removeTypingIndicator();
-        addStatusMessage("Stranger skipped you! Redirecting...");
-        toggleUI(false, "Redirecting...");
-        setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'next' }));
-            }
-        }, 1000);
     };
 
     const openChat = (isNearby = false) => {
@@ -220,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const addMessage = (text, type = 'sent') => {
+        if (!chatMessages) return;
         const container = document.createElement('div');
         container.className = `message-container ${type}-container`;
         const msgDiv = document.createElement('div');
@@ -237,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showTypingIndicator = () => {
         if (document.getElementById('typing-indicator')) return;
+        if (!chatMessages) return;
         const msgDiv = document.createElement('div');
         msgDiv.id = 'typing-indicator';
         msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
@@ -265,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
     if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
 
-    // Background stars logic
     const initBackground = () => {
         const container = document.querySelector('.stars-container');
         if (!container) return;
