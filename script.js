@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (chatPage) chatPage.classList.remove('hidden');
                     if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
                     
-                    // Delay search for 5 seconds when coming back
+                    // Delay search for 2 seconds when coming back
                     showSearching();
                     setTimeout(() => {
                         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             initWebSocket();
                         }
-                    }, 5000);
+                    }, 2000);
                 },
                 (error) => {
                     alert("Unable to retrieve your location. Using random match instead.");
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     initWebSocket();
                 }
-            }, 5000);
+            }, 2000);
         }
     };
 
