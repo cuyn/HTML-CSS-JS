@@ -10,14 +10,13 @@ let waitingUsers = [];
 
 // دالة المطابقة المحسنة
 function matchUsers() {
-    // نفلتر القائمة أولاً من أي مستخدم اتصاله مقطوع لتجنب التعليق
+    // تصفية القائمة من أي اتصالات مقطوعة قبل البدء
     waitingUsers = waitingUsers.filter(u => u.readyState === WebSocket.OPEN);
 
     while (waitingUsers.length >= 2) {
         const user1 = waitingUsers.shift();
         const user2 = waitingUsers.shift();
 
-        // ربط المستخدمين
         user1.partner = user2;
         user2.partner = user1;
 
@@ -34,34 +33,40 @@ function removeFromWaiting(ws) {
 wss.on('connection', (ws) => {
     ws.partner = null;
 
+    // محاولة مطابقة فورية عند دخول أي مستخدم جديد
+    matchUsers();
+
     ws.on('message', (message) => {
         let data;
         try { 
             data = JSON.parse(message.toString()); 
         } catch { return; }
 
+        // معالجة طلب البحث أو الانتقال للتالي
         if (data.type === 'find_partner' || data.type === 'next') {
-            // إنهاء الشراكة القديمة إن وجدت
+
+            // --- الجزء الخاص بالتنبيه عند التجاهل (Next) ---
             if (ws.partner) {
                 const partner = ws.partner;
                 if (partner.readyState === WebSocket.OPEN) {
-                    partner.partner = null;
+                    // إرسال تنبيه فوري للطرف الآخر بأنه تم تخطيه
                     partner.send(JSON.stringify({ type: 'partner_left' }));
 
-                    // إعادة الشريك القديم للبحث
+                    partner.partner = null;
+                    // إعادة الطرف الآخر لقائمة الانتظار تلقائياً
                     removeFromWaiting(partner);
                     waitingUsers.push(partner);
                     partner.send(JSON.stringify({ type: 'searching' }));
                 }
                 ws.partner = null;
             }
+            // --------------------------------------------
 
-            // إضافة المستخدم الحالي للانتظار
             removeFromWaiting(ws); 
             waitingUsers.push(ws);
             ws.send(JSON.stringify({ type: 'searching' }));
 
-            // تشغيل المطابقة
+            // تشغيل عملية البحث
             matchUsers();
         }
 
@@ -70,19 +75,26 @@ wss.on('connection', (ws) => {
                 ws.partner.send(JSON.stringify(data));
             }
         }
+
+        else if (data.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
+        }
     });
 
     ws.on('close', () => {
         removeFromWaiting(ws);
+
         if (ws.partner) {
             const partner = ws.partner;
             if (partner.readyState === WebSocket.OPEN) {
                 partner.partner = null;
+                // إرسال تنبيه للشريك بأن الطرف الآخر أغلق الصفحة
                 partner.send(JSON.stringify({ type: 'partner_left' }));
 
                 removeFromWaiting(partner);
                 waitingUsers.push(partner);
                 partner.send(JSON.stringify({ type: 'searching' }));
+
                 matchUsers();
             }
         }
