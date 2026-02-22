@@ -9,14 +9,19 @@ const wss = new WebSocket.Server({ server });
 let waitingUsers = [];
 
 function matchUsers() {
-    waitingUsers = waitingUsers.filter(u => u.readyState === WebSocket.OPEN);
     while (waitingUsers.length >= 2) {
         const user1 = waitingUsers.shift();
         const user2 = waitingUsers.shift();
-        user1.partner = user2;
-        user2.partner = user1;
-        user1.send(JSON.stringify({ type: 'connected' }));
-        user2.send(JSON.stringify({ type: 'connected' }));
+        if (user1.readyState === WebSocket.OPEN && user2.readyState === WebSocket.OPEN) {
+            user1.partner = user2;
+            user2.partner = user1;
+            user1.send(JSON.stringify({ type: 'connected' }));
+            user2.send(JSON.stringify({ type: 'connected' }));
+        } else {
+            if (user1.readyState === WebSocket.OPEN) waitingUsers.unshift(user1);
+            if (user2.readyState === WebSocket.OPEN) waitingUsers.unshift(user2);
+            break; 
+        }
     }
 }
 
@@ -34,7 +39,8 @@ wss.on('connection', (ws) => {
             if (ws.partner) {
                 const partner = ws.partner;
                 if (partner.readyState === WebSocket.OPEN) {
-                    partner.send(JSON.stringify({ type: 'partner_left' })); // التنبيه ليوسف
+                    // هذا هو السطر المطلوب لإرسال التنبيه لـ يوسف
+                    partner.send(JSON.stringify({ type: 'partner_left' }));
                     partner.partner = null;
                     removeFromWaiting(partner);
                     waitingUsers.push(partner);
@@ -70,4 +76,6 @@ wss.on('connection', (ws) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, '0.0.0.0', () => { console.log(`Server running on port ${PORT}`); });
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
+});
