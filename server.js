@@ -8,13 +8,19 @@ const wss = new WebSocket.Server({ server });
 
 let waitingUsers = [];
 
+// دالة المطابقة
 function matchUsers() {
     while (waitingUsers.length >= 2) {
         const user1 = waitingUsers.shift();
         const user2 = waitingUsers.shift();
-        if (user1.readyState === WebSocket.OPEN && user2.readyState === WebSocket.OPEN) {
+
+        if (
+            user1.readyState === WebSocket.OPEN &&
+            user2.readyState === WebSocket.OPEN
+        ) {
             user1.partner = user2;
             user2.partner = user1;
+
             user1.send(JSON.stringify({ type: 'connected' }));
             user2.send(JSON.stringify({ type: 'connected' }));
         } else {
@@ -31,16 +37,21 @@ function removeFromWaiting(ws) {
 
 wss.on('connection', (ws) => {
     ws.partner = null;
+
     ws.on('message', (message) => {
         let data;
-        try { data = JSON.parse(message.toString()); } catch { return; }
+        try { 
+            data = JSON.parse(message.toString()); 
+        } catch { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
             if (ws.partner) {
                 const partner = ws.partner;
+
                 if (partner.readyState === WebSocket.OPEN) {
-                    // هذا هو السطر المطلوب لإرسال التنبيه لـ يوسف
+                    // إرسال تنبيه للطرف الثاني (يوسف) فوراً
                     partner.send(JSON.stringify({ type: 'partner_left' }));
+
                     partner.partner = null;
                     removeFromWaiting(partner);
                     waitingUsers.push(partner);
@@ -48,11 +59,14 @@ wss.on('connection', (ws) => {
                 }
                 ws.partner = null;
             }
+
             removeFromWaiting(ws);
             waitingUsers.push(ws);
             ws.send(JSON.stringify({ type: 'searching' }));
             matchUsers();
-        } else if (data.type === 'message' || data.type === 'typing') {
+        }
+
+        else if (data.type === 'message' || data.type === 'typing') {
             if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
                 ws.partner.send(JSON.stringify(data));
             }
@@ -64,14 +78,18 @@ wss.on('connection', (ws) => {
         if (ws.partner) {
             const partner = ws.partner;
             if (partner.readyState === WebSocket.OPEN) {
-                partner.partner = null;
                 partner.send(JSON.stringify({ type: 'partner_left' }));
+                partner.partner = null;
                 removeFromWaiting(partner);
                 waitingUsers.push(partner);
                 partner.send(JSON.stringify({ type: 'searching' }));
                 matchUsers();
             }
         }
+    });
+
+    ws.on('error', () => {
+        removeFromWaiting(ws);
     });
 });
 

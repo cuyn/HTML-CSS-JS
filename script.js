@@ -20,7 +20,7 @@ function updateBanners() {
     [bannerText, bannerTextChat].forEach(el => {
         if (el) {
             el.classList.remove('ad-fade-in');
-            void el.offsetWidth; // Trigger reflow
+            void el.offsetWidth;
             el.classList.add('ad-fade-in');
             el.textContent = ad.text;
         }
@@ -30,7 +30,7 @@ function updateBanners() {
     if (bannerLinkChat) bannerLinkChat.href = ad.link;
 
     currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
-    countdownSeconds = 15; 
+    countdownSeconds = 15;
 }
 
 function startCountdown() {
@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
+    const nextChatBtn = document.getElementById('next-chat');
 
     if (window.lucide) { lucide.createIcons(); }
 
@@ -121,9 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.type === 'typing') {
                 showTypingIndicator();
             } 
-            // استقبال تنبيه "يوسف" هنا
+            // التعديل الوحيد لاستلام التنبيه
             else if (data.type === 'partner_left') {
-                handlePartnerLeft();
+                handlePartnerLeft(); 
             }
         };
 
@@ -186,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startNearby) startNearby.addEventListener('click', () => openChat(true));
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
 
-    const nextChatBtn = document.getElementById('next-chat');
     if (nextChatBtn) {
         nextChatBtn.addEventListener('click', () => {
             if (!nextChatBtn.disabled && socket && socket.readyState === WebSocket.OPEN) {
@@ -242,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
     if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
 
-    // النجوم والخلفية كما هي
     const initBackground = () => {
         const container = document.querySelector('.stars-container');
         if (!container) return;
