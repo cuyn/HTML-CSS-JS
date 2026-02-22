@@ -17,11 +17,10 @@ function updateBanners() {
     const bannerLinkChat = document.getElementById('ad-banner-link-chat');
     const bannerTextChat = document.querySelector('#ad-banner-link-chat .ticker-content span');
 
-    // Add fade-in class for smooth transition
     [bannerText, bannerTextChat].forEach(el => {
         if (el) {
             el.classList.remove('ad-fade-in');
-            void el.offsetWidth; // Trigger reflow
+            void el.offsetWidth;
             el.classList.add('ad-fade-in');
             el.textContent = ad.text;
         }
@@ -31,7 +30,7 @@ function updateBanners() {
     if (bannerLinkChat) bannerLinkChat.href = ad.link;
 
     currentAdIndex = (currentAdIndex + 1) % AD_CONFIGS.length;
-    countdownSeconds = 15; // Reset countdown
+    countdownSeconds = 15;
 }
 
 function startCountdown() {
@@ -40,12 +39,10 @@ function startCountdown() {
         if (countdownSeconds < 0) {
             updateBanners();
         }
-
         const badges = [
             document.getElementById('countdown-badge'),
             document.querySelector('.countdown-badge-chat')
         ];
-
         badges.forEach(badge => {
             if (badge) badge.textContent = `${countdownSeconds}s`;
         });
@@ -55,7 +52,6 @@ function startCountdown() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing...");
 
-    // 1. Initialize Elements
     const landingPage = document.getElementById('landing-page');
     const chatPage = document.getElementById('chat-page');
     const startNearby = document.getElementById('start-nearby');
@@ -66,43 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
+    const nextChatBtn = document.getElementById('next-chat');
 
-    // Initialize Lucide icons
     if (window.lucide) {
         lucide.createIcons();
     }
 
-    // Initialize and Start Ad Rotation with Countdown
     updateBanners(); 
     startCountdown();
 
-    // 2.5 Generate Random User Color
     const userColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
-
-    // Apply random color ONLY to Anonymous text in chat header
     if (partnerName) {
         partnerName.style.color = userColor;
     }
 
-    // 3. Gender Selection
     const genderButtons = document.querySelectorAll('.gender-btn');
     let selectedGender = null;
-
     genderButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             genderButtons.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedGender = btn.dataset.gender;
-            console.log("Gender selected:", selectedGender);
         });
     });
 
-    // 4. Status Messaging
     const addStatusMessage = (text) => {
         if (chatMessages) {
             const existingMsgs = chatMessages.querySelectorAll('.status-msg');
             existingMsgs.forEach(msg => msg.remove());
-
             const msgDiv = document.createElement('div');
             msgDiv.className = "self-center bg-amber-500/20 text-amber-500 text-xs font-medium px-4 py-2 rounded-2xl border border-amber-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-amber-500/10";
             msgDiv.textContent = text;
@@ -116,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatMessages) {
             const existingMsgs = chatMessages.querySelectorAll('.status-msg');
             existingMsgs.forEach(msg => msg.remove());
-
             const msgDiv = document.createElement('div');
             msgDiv.className = "self-center bg-red-500/20 text-red-500 text-xs font-medium px-4 py-2 rounded-2xl border border-red-500/40 mb-2 animate-pulse status-msg w-fit max-w-[90%] text-center shadow-lg shadow-red-500/10";
             msgDiv.textContent = text;
@@ -126,115 +112,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 5. WebSocket Logic
     let socket = null;
 
     const initWebSocket = () => {
-        if (socket) return;
+        if (socket && socket.readyState === WebSocket.OPEN) return;
 
-        // Use the current Replit domain dynamically or the fixed one
-        const replitUrl = 'html-css-js--mtaaaaqlk1.replit.app';
+        const host = 'html-css-js--mtaaaaqlk1.replit.app';
+        socket = new WebSocket(`wss://${host}`);
 
-        // Determine the correct host
-        const host = replitUrl;
+        socket.onopen = () => {
+            console.log("Connected to Server");
+            // بمجرد الاتصال، نرسل طلب البحث فوراً
+            socket.send(JSON.stringify({ type: 'find_partner' }));
+        };
 
-        console.log("Attempting WebSocket connection to:", host);
-        // Netlify is HTTPS, Replit is HTTPS. Always use WSS for security and compatibility.
-        const wsProtocol = 'wss';
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'searching') {
+                showSearching();
+            } else if (data.type === 'connected') {
+                enableChatUI();
+                chatMessages.innerHTML = "";
+                const msgDiv = document.createElement('div');
+                msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
+                msgDiv.textContent = "Connected with a real person! Say hi!";
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else if (data.type === 'message') {
+                removeTypingIndicator();
+                addMessage(data.text, 'received');
+            } else if (data.type === 'typing') {
+                showTypingIndicator();
+            } else if (data.type === 'partner_left') {
+                handlePartnerLeft();
+            }
+        };
 
-        try {
-            socket = new WebSocket(`${wsProtocol}://${host}`);
-
-            socket.onopen = () => {
-                console.log("WebSocket connected to:", host);
-                const existingMsgs = chatMessages.querySelectorAll('.status-msg');
-                existingMsgs.forEach(msg => {
-                    if (msg.textContent.includes("Connection lost")) msg.remove();
-                });
-                // Send a ping to keep connection alive every 30s
-                socket.pingInterval = setInterval(() => {
-                    if (socket.readyState === WebSocket.OPEN) {
-                        socket.send(JSON.stringify({ type: 'ping' }));
-                    }
-                }, 30000);
-            };
-
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === 'pong') return; // Ignore pong responses
-                if (data.type === 'searching') {
-                    addStatusMessage("Searching for a partner...");
-                } else if (data.type === 'connected') {
-                    chatMessages.innerHTML = "";
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
-                    msgDiv.textContent = "Connected with a real person! Say hi!";
-                    chatMessages.appendChild(msgDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                    if (chatInput) {
-                        chatInput.disabled = false;
-                        chatInput.placeholder = "Type a message...";
-                    }
-                    if (sendButton) sendButton.disabled = false;
-
-                    // Update partner color based on data from server
-                    if (partnerName) {
-                        partnerName.innerText = `Anonymous`;
-                        if (data.partnerColor) {
-                            partnerName.style.color = data.partnerColor;
-                        }
-                    }
-                } else if (data.type === 'message') {
-                    removeTypingIndicator();
-                    addMessage(data.text, 'received');
-                } else if (data.type === 'typing') {
-                    showTypingIndicator();
-                } else if (data.type === 'disconnected' || data.type === 'skipped' || data.type === 'partner_left') {
-                    handlePartnerLeft();
-                }
-            };
-
-            socket.onerror = (error) => {
-                console.error("WebSocket error:", error);
-            };
-
-            socket.onclose = (event) => {
-                console.log("WebSocket closed. Code:", event.code, "Reason:", event.reason);
-                if (socket.pingInterval) clearInterval(socket.pingInterval);
-                socket = null;
-                if (!chatPage.classList.contains('hidden')) {
-                    addErrorMessage("Connection lost. Trying to reconnect...");
-                    setTimeout(initWebSocket, 2000); // Faster retry
-                }
-            };
-        } catch (err) {
-            console.error("WebSocket construction failed:", err);
-            setTimeout(initWebSocket, 5000);
-        }
+        socket.onclose = () => {
+            socket = null;
+            if (!chatPage.classList.contains('hidden')) {
+                setTimeout(initWebSocket, 2000);
+            }
+        };
     };
 
     const toggleUI = (enabled, placeholder) => {
         chatInput.disabled = !enabled;
         chatInput.placeholder = placeholder;
-        // Only disable Next button if we are SEARCHING (placeholder contains "Searching")
-        // If we are in chat, Next should be ENABLED
         const isSearching = placeholder.toLowerCase().includes("searching") || placeholder.toLowerCase().includes("redirecting");
-        nextChatBtn.disabled = isSearching;
-        nextChatBtn.style.opacity = isSearching ? "0.5" : "1";
-        nextChatBtn.style.pointerEvents = isSearching ? "none" : "auto";
+        if (nextChatBtn) {
+            nextChatBtn.disabled = isSearching;
+            nextChatBtn.style.opacity = isSearching ? "0.5" : "1";
+        }
         sendButton.disabled = !enabled;
-        chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
     const enableChatUI = () => {
         chatInput.disabled = false;
         chatInput.placeholder = "Type a message...";
-        nextChatBtn.disabled = false;
-        nextChatBtn.style.opacity = "1";
-        nextChatBtn.style.pointerEvents = "auto";
+        if (nextChatBtn) {
+            nextChatBtn.disabled = false;
+            nextChatBtn.style.opacity = "1";
+        }
         sendButton.disabled = false;
-        chatInput.focus();
     };
 
     const showSearching = () => {
@@ -247,104 +187,29 @@ document.addEventListener('DOMContentLoaded', () => {
         removeTypingIndicator();
         addStatusMessage("Stranger skipped you! Redirecting...");
         toggleUI(false, "Redirecting...");
-
         setTimeout(() => {
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({ type: 'next' }));
-                showSearching();
             }
-        }, 1500);
+        }, 1000);
     };
 
     const openChat = (isNearby = false) => {
+        if (landingPage) landingPage.classList.add('hidden');
+        if (chatPage) chatPage.classList.remove('hidden');
+
         if (isNearby) {
-            if (!navigator.geolocation) {
-                alert("Geolocation is not supported by your browser.");
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const randomDistance = (Math.random() * 19 + 0.5).toFixed(1);
-                    if (landingPage) landingPage.classList.add('hidden');
-                    if (chatPage) chatPage.classList.remove('hidden');
-                    if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
-                    
-                    // Delay search for 2 seconds when coming back
-                    showSearching();
-                    setTimeout(() => {
-                        if (socket && socket.readyState === WebSocket.OPEN) {
-                            socket.send(JSON.stringify({ type: 'find_partner' }));
-                        } else {
-                            initWebSocket();
-                        }
-                    }, 2000);
-                },
-                (error) => {
-                    alert("Unable to retrieve your location. Using random match instead.");
-                    if (landingPage) landingPage.classList.add('hidden');
-                    if (chatPage) chatPage.classList.remove('hidden');
-                    
-                    showSearching();
-                    setTimeout(() => {
-                        if (socket && socket.readyState === WebSocket.OPEN) {
-                            socket.send(JSON.stringify({ type: 'find_partner' }));
-                        } else {
-                            initWebSocket();
-                        }
-                    }, 5000);
-                }
-            );
-        } else {
-            if (landingPage) landingPage.classList.add('hidden');
-            if (chatPage) chatPage.classList.remove('hidden');
-            
-            showSearching();
-            setTimeout(() => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({ type: 'find_partner' }));
-                } else {
-                    initWebSocket();
-                }
-            }, 2000);
+            const randomDistance = (Math.random() * 19 + 0.5).toFixed(1);
+            if (chatSubtitle) chatSubtitle.innerHTML = `<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> ${randomDistance}km away`;
         }
+
+        showSearching();
+        initWebSocket();
     };
 
     if (startNearby) startNearby.addEventListener('click', () => openChat(true));
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
-    const backToHome = document.getElementById('back-to-home');
-    if (backToHome) {
-        backToHome.addEventListener('click', () => {
-            console.log("Back to home clicked");
-            if (socket) {
-                socket.close();
-                socket = null;
-            }
-            if (chatPage) chatPage.classList.add('hidden');
-            if (landingPage) landingPage.classList.remove('hidden');
-            
-            // Reset chat state
-            chatMessages.innerHTML = "";
-            toggleUI(true, "Type a message...");
-        });
-    }
 
-    if (exitChat) {
-        exitChat.addEventListener('click', () => {
-            console.log("Exit chat clicked");
-            if (socket) {
-                socket.close();
-                socket = null;
-            }
-            if (chatPage) chatPage.classList.add('hidden');
-            if (landingPage) landingPage.classList.remove('hidden');
-            
-            // Reset chat state
-            chatMessages.innerHTML = "";
-            toggleUI(true, "Type a message...");
-        });
-    }
-
-    const nextChatBtn = document.getElementById('next-chat');
     if (nextChatBtn) {
         nextChatBtn.addEventListener('click', () => {
             if (!nextChatBtn.disabled && socket && socket.readyState === WebSocket.OPEN) {
@@ -354,24 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    let replyingTo = null;
-
     const addMessage = (text, type = 'sent') => {
-        if (chatMessages) {
-            removeTypingIndicator();
-            const container = document.createElement('div');
-            container.className = `message-container ${type}-container`;
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${type}`;
-            msgDiv.textContent = text;
-
-            container.appendChild(msgDiv);
-            chatMessages.appendChild(container);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            if (window.lucide) lucide.createIcons();
-        }
+        const container = document.createElement('div');
+        container.className = `message-container ${type}-container`;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.textContent = text;
+        container.appendChild(msgDiv);
+        chatMessages.appendChild(container);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
     const removeTypingIndicator = () => {
@@ -381,20 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showTypingIndicator = () => {
         if (document.getElementById('typing-indicator')) return;
-        if (chatMessages) {
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'typing-indicator';
-            msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
-            msgDiv.innerHTML = `
-                <div class="flex gap-1">
-                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s]"></span>
-                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></span>
-                    <span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></span>
-                </div>
-            `;
-            chatMessages.appendChild(msgDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+        const msgDiv = document.createElement('div');
+        msgDiv.id = 'typing-indicator';
+        msgDiv.className = "self-start bg-zinc-800/50 backdrop-blur-sm px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-1.5 mb-2";
+        msgDiv.innerHTML = `<div class="flex gap-1"><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.2s]"></span><span class="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:0.4s]"></span></div>`;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
     if (chatInput) {
@@ -406,65 +254,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const sendMessage = () => {
-        if (chatInput && socket && socket.readyState === WebSocket.OPEN) {
-            const text = chatInput.value.trim();
-            if (text) {
-                const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/[^\s]*)?)/g;
-                if (urlPattern.test(text)) {
-                    addErrorMessage("Links are not allowed.");
-                    chatInput.value = '';
-                    return;
-                }
-
-                const messageData = { type: 'message', text: text };
-
-                socket.send(JSON.stringify(messageData));
-                addMessage(text, 'sent');
-
-                chatInput.value = '';
-            }
+        const text = chatInput.value.trim();
+        if (text && socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'message', text: text }));
+            addMessage(text, 'sent');
+            chatInput.value = '';
         }
     };
 
     if (sendButton) sendButton.addEventListener('click', (e) => { e.preventDefault(); sendMessage(); });
     if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
 
-    setInterval(() => {
-        const count = document.getElementById('online-count');
-        if (count) {
-            const current = parseInt(count.innerText) || 280;
-            const change = Math.floor(Math.random() * 5) - 2;
-            count.innerText = Math.max(100, current + change);
-        }
-    }, 5000);
-
+    // Background stars logic
     const initBackground = () => {
         const container = document.querySelector('.stars-container');
         if (!container) return;
         for (let i = 0; i < 60; i++) {
             const star = document.createElement('div');
             star.className = 'star';
-            const size = Math.random() * 1.5 + 0.5;
-            star.style.width = `${size}px`;
-            star.style.height = `${size}px`;
             star.style.left = `${Math.random() * 100}%`;
             star.style.top = `${Math.random() * 100}%`;
-            star.style.setProperty('--duration', `${Math.random() * 4 + 3}s`);
             container.appendChild(star);
         }
-        const createMeteor = () => {
-            const meteor = document.createElement('div');
-            meteor.className = 'meteor';
-            meteor.style.left = `${Math.random() * 100 + 40}%`;
-            meteor.style.top = `${Math.random() * 30}%`;
-            meteor.style.setProperty('--duration', `${Math.random() * 1.5 + 1}s`);
-            container.appendChild(meteor);
-            setTimeout(() => meteor.remove(), 3000);
-        };
-        const scheduleMeteor = () => {
-            setTimeout(() => { createMeteor(); scheduleMeteor(); }, Math.random() * 8000 + 4000);
-        };
-        scheduleMeteor();
     };
     initBackground();
 });
