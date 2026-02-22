@@ -217,9 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleUI = (enabled, placeholder) => {
         chatInput.disabled = !enabled;
         chatInput.placeholder = placeholder;
-        nextChatBtn.disabled = !enabled;
-        nextChatBtn.style.opacity = enabled ? "1" : "0.5";
-        nextChatBtn.style.pointerEvents = enabled ? "auto" : "none";
+        // Only disable Next button if we are SEARCHING (placeholder contains "Searching")
+        // If we are in chat, Next should be ENABLED
+        const isSearching = placeholder.toLowerCase().includes("searching") || placeholder.toLowerCase().includes("redirecting");
+        nextChatBtn.disabled = isSearching;
+        nextChatBtn.style.opacity = isSearching ? "0.5" : "1";
+        nextChatBtn.style.pointerEvents = isSearching ? "none" : "auto";
         sendButton.disabled = !enabled;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
