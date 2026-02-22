@@ -48,7 +48,6 @@ wss.on('connection', (ws) => {
         } catch { return; }
 
         if (data.type === 'find_partner' || data.type === 'next') {
-
             // لو عنده شريك حالياً
             if (ws.partner) {
                 const partner = ws.partner;
@@ -72,7 +71,7 @@ wss.on('connection', (ws) => {
 
             ws.send(JSON.stringify({ type: 'searching' }));
 
-            // نحاول المطابقة فوراً
+            // نحاول المطابقة فوراً لكل من في الانتظار
             matchUsers();
         }
 
