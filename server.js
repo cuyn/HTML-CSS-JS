@@ -47,11 +47,8 @@ wss.on('connection', (ws) => {
         if (data.type === 'find_partner' || data.type === 'next') {
             if (ws.partner) {
                 const partner = ws.partner;
-
                 if (partner.readyState === WebSocket.OPEN) {
-                    // إرسال تنبيه للطرف الثاني (يوسف) فوراً
                     partner.send(JSON.stringify({ type: 'partner_left' }));
-
                     partner.partner = null;
                     removeFromWaiting(partner);
                     waitingUsers.push(partner);
@@ -63,6 +60,8 @@ wss.on('connection', (ws) => {
             removeFromWaiting(ws);
             waitingUsers.push(ws);
             ws.send(JSON.stringify({ type: 'searching' }));
+            
+            // محاولة مطابقة فورية
             matchUsers();
         }
 
