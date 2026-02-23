@@ -115,6 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 msgDiv.className = "self-center bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20";
                 msgDiv.textContent = "Connected with a real person! Say hi!";
                 chatMessages.appendChild(msgDiv);
+                
+                // إشعار صوتي عند التطابق
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+                    audio.volume = 0.3;
+                    audio.play();
+                } catch (e) { console.log("Audio play blocked"); }
+
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } else if (data.type === 'message') {
                 removeTypingIndicator();
