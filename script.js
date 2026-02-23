@@ -101,7 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
         socket = new WebSocket(`wss://${host}`);
 
         socket.onopen = () => {
-            console.log("WebSocket connected");
+            console.log("WebSocket connected. Re-sending find_partner...");
+            // If we were already on the chat page and reconnected, re-trigger search
+            if (!chatPage.classList.contains('hidden')) {
+                socket.send(JSON.stringify({ type: 'find_partner' }));
+            }
         };
 
         socket.onmessage = (event) => {
