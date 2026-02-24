@@ -199,6 +199,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startNearby) startNearby.addEventListener('click', () => openChat(true));
     if (startRandom) startRandom.addEventListener('click', () => openChat(false));
 
+    const backToHome = document.getElementById('back-to-home');
+    if (backToHome) {
+        // Force styling via JS to ensure it's clickable
+        backToHome.style.setProperty('cursor', 'pointer', 'important');
+        backToHome.style.setProperty('z-index', '9999', 'important');
+        backToHome.style.setProperty('pointer-events', 'auto', 'important');
+        
+        const handleBack = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Back navigation triggered");
+            
+            if (socket) {
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ type: 'next' }));
+                }
+                socket.close();
+                socket = null;
+            }
+            
+            if (chatPage) chatPage.classList.add('hidden');
+            if (landingPage) landingPage.classList.remove('hidden');
+            
+            // Reset chat state
+            chatMessages.innerHTML = "";
+            toggleUI(true, "Type a message...");
+            localStorage.removeItem('lastPartnerId');
+        };
+
+        backToHome.addEventListener('click', handleBack, true);
+        backToHome.addEventListener('touchstart', (e) => {
+            // Mobile specific fix
+            if (e.cancelable) handleBack(e);
+        }, { passive: false, capture: true });
+    }
+
+    if (exitChat) {
+        exitChat.addEventListener('click', () => {
+            console.log("Exit chat clicked");
+            if (socket) {
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ type: 'next' }));
+                }
+                socket.close();
+                socket = null;
+            }
+            if (chatPage) chatPage.classList.add('hidden');
+            if (landingPage) landingPage.classList.remove('hidden');
+            
+            // Reset chat state
+            chatMessages.innerHTML = "";
+            toggleUI(true, "Type a message...");
+        });
+    }
+
     if (nextChatBtn) {
         nextChatBtn.addEventListener('click', () => {
             if (!nextChatBtn.disabled && socket && socket.readyState === WebSocket.OPEN) {

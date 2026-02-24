@@ -40,8 +40,21 @@ header {
     -webkit-backdrop-filter: none !important;
 }
 
-.hidden {
-    display: none !important;
+#back-to-home {
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+header {
+    position: relative;
+    z-index: 10;
 }
 
 .gender-btn.selected {
